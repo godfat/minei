@@ -1,0 +1,15 @@
+
+# MineSweeper AI for PsMonkey's GWT MineSweeper
+
+# start GWT devmode
+> ant devmode
+
+# build scala AI only
+> ./godfat.sh
+
+# build entire application (if failed build the scala AI first)
+> ant build
+
+# paths need to be setup
+# gwt.sdk: /Users/godfat/project/fork/mine/gwt-2.0.4
+# scala-library: /usr/local/lib/scala-library.jar
