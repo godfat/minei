@@ -1,6 +1,8 @@
 
-*
+/*
 !/Godfat.scala
 !/build.xml
 !/godfat.sh
 !/README
+
+!/war/WEB-INF/classes/org/godfat/mine/*.class
