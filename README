@@ -1,6 +1,23 @@
 
 # MineSweeper AI for PsMonkey's GWT MineSweeper
 
+# setup for people who don't have scala installed.
+> wget http://github.com/godfat/minei/raw/master/war/WEB-INF/classes/org/godfat/mine/Godfat.class
+# the source of the class is here:
+# http://github.com/godfat/minei/blob/master/Godfat.scala
+
+# move the AI class to war/
+> mkdir -p war/WEB-INF/classes/org/godfat/mine/
+> mv Godfat.class war/WEB-INF/classes/org/godfat/mine/
+
+# get scala-library.jar
+> wget http://www.scala-lang.org/downloads/distrib/files/scala-2.8.0.final.tgz
+> tar -zxf scala-2.8.0.final.tgz
+> mv scala-2.8.0.final/lib/scala-library.jar war/WEB-INF/lib
+# remember to include scala-library.jar to classpath
+
+# ---
+
 # start GWT devmode
 > ant devmode
 
