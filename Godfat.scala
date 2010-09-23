@@ -1,5 +1,5 @@
 
-// package org.godfat.mine
+// package org.godfat.minei
 
 import org.psmonkey.product.client.mine.vo.GameInfo
 import org.psmonkey.product.server.mine.AI_Interface

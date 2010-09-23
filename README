@@ -7,8 +7,8 @@
 # http://github.com/godfat/minei/blob/master/Godfat.scala
 
 # move the AI class to war/
-> mkdir -p war/WEB-INF/classes/org/godfat/mine/
-> mv Godfat.class war/WEB-INF/classes/org/godfat/mine/
+> mkdir -p war/WEB-INF/classes/org/godfat/minei/
+> mv Godfat.class war/WEB-INF/classes/org/godfat/minei/
 
 # get scala-library.jar
 > wget http://www.scala-lang.org/downloads/distrib/files/scala-2.8.0.final.tgz
