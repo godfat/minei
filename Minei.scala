@@ -110,8 +110,8 @@ case class Imp(val map_raw: Array[Array[Int]]){
       (x: Int, result: MineMap) => Range(-1, 1).foldRight(result)(
         (y: Int, result: MineMap) =>
           map.get((x, y)) match{
-            case Some(size: MineSize) => result.insert((x, y), size)
-            case _                    => result
+            case Some(size) => result.insert((x, y), size)
+            case _          => result
           }
       )
     )
