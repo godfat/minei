@@ -7,7 +7,7 @@ import org.psmonkey.product.server.mine.MineGM
 
 import scala.collection.immutable.TreeMap
 
-class Godfat extends AI_Interface{
+class Minei extends AI_Interface{
   override def guess(info: GameInfo, xy: Array[Int]){
     val result = Imp(info.getMap()).pick
     xy.update(0, result._1)
