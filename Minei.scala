@@ -62,7 +62,8 @@ case class Imp(val map_raw: Array[Array[Int]]){
   case class ClueSet() extends TreeSet[Clue]{
     def test(result: Choices): Choices = result
     def conclude: Clue = Clue(map(_.amount).min, overlap)
-    def overlap: List[Pos] = List() // TODO
+    def overlap: List[Pos] = poses.tail.foldRight(poses.head)(_.intersect(_))
+    def poses: List[List[Pos]] = map(_.poses).toList
   }
 
   val available: Int = -1
