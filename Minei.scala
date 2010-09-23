@@ -77,12 +77,14 @@ case class Imp(val map_raw: Array[Array[Int]]){
   // all choices (available block) with calculated priority
   def choices:      Choices = map_available.foldRight(init_choices)(
     (pos_size: (Pos, MineSize), result: Choices) =>
-      nearby(pos_size._1, map_dug).foldRight(ClueSet())(
-        (pos_size: (Pos, MineSize), set: ClueSet) =>
-          (set + Clue(pos_size._2,
-                      nearby(pos_size._1, map_available).keys.toList)
-          ).asInstanceOf[ClueSet]
-      ).test(result)
+      result.insert(
+        pos_size._1,
+        nearby(pos_size._1, map_dug).foldRight(ClueSet())(
+          (pos_size: (Pos, MineSize), set: ClueSet) =>
+            (set + Clue(pos_size._2,
+                        nearby(pos_size._1, map_available).keys.toList)
+            ).asInstanceOf[ClueSet]
+        ).conclude.possibility)
   )
 
   // all choices (available block) with 0 priority
