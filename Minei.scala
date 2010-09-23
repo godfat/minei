@@ -5,7 +5,7 @@ import org.psmonkey.product.client.mine.vo.GameInfo
 import org.psmonkey.product.server.mine.AI_Interface
 import org.psmonkey.product.server.mine.MineGM
 
-import scala.collection.immutable.TreeMap
+import scala.collection.immutable.{TreeMap, TreeSet}
 
 class Minei extends AI_Interface{
   override def guess(info: GameInfo, xy: Array[Int]){
@@ -29,14 +29,26 @@ case class Imp(val map_raw: Array[Array[Int]]){
   type Priority = Double
   type MineSize = Int
 
-  type Choices  = TreeMap[Pos, Priority]
-  type MineMap  = TreeMap[Pos, MineSize]
+  type Choices = TreeMap[Pos, Priority]
+  type MineMap = TreeMap[Pos, MineSize]
+  // type ClueSet = TreeSet[Clue]
 
   val  Choices = TreeMap
   val  MineMap = TreeMap
+  // val  ClueSet = TreeSet
 
   type Idx = Int
   type Pos = (Idx, Idx)
+
+  case class Clue(val amount: MineSize, val poses: List[Pos])
+    extends Ordered[Clue]{
+    def possibility: Double = amount.toDouble / poses.size
+    def compare(that: Clue) = possibility.compare(that.possibility)
+  }
+
+  case class ClueSet() extends TreeSet[Clue]{
+    def test(result: Choices): Choices = result
+  }
 
   val available: Int = -1
   val mine     : Int = -8
@@ -50,9 +62,12 @@ case class Imp(val map_raw: Array[Array[Int]]){
   // all choices (available block) with calculated priority
   def choices:      Choices = map_available.foldRight(init_choices)(
     (pos_size: (Pos, MineSize), result: Choices) =>
-      ClueSet(nearby(pos_size._1, map_dug).map( (pos_size: (Pos, MineSize)) =>
-        Clue(pos_size._2, nearby(pos_size._1, map_available).keys.toList)
-      ).toList).test(result)
+      nearby(pos_size._1, map_dug).foldRight(ClueSet())(
+        (pos_size: (Pos, MineSize), set: ClueSet) =>
+          (set +
+          Clue(pos_size._2, nearby(pos_size._1, map_available).keys.toList)).
+          asInstanceOf[ClueSet]
+      ).test(result)
   )
 
   // all choices (available block) with 0 priority
@@ -87,14 +102,6 @@ case class Imp(val map_raw: Array[Array[Int]]){
           }
       )
     )
-
-  case class Clue(val amount: MineSize, val poses: List[Pos]){
-
-  }
-
-  case class ClueSet(val clues: List[Clue]){
-    def test(result: Choices): Choices = result
-  }
 }
 
 println(Imp(Array(Array(0,1), Array(2,3))).map)
