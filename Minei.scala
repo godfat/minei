@@ -43,7 +43,20 @@ case class Imp(val map_raw: Array[Array[Int]]){
   case class Clue(val amount: MineSize, val poses: List[Pos])
     extends Ordered[Clue]{
     def possibility: Double = amount.toDouble / poses.size
-    def compare(that: Clue) = possibility.compare(that.possibility)
+    // begin horrible! why there's no default lexical comparison?
+    def compare(that: Clue) =
+      if(compare_amount(that) != 0){ compare_amount(that) }
+      else if(poses.size != that.poses.size){
+        poses.size.compare(that.poses.size)
+      }
+      else{
+        poses.zip(that.poses).find( (p: (Pos, Pos)) => p._1 != p._2 ) match{
+          case Some(p) => Ordering[Pos].compare(p._1, p._2)
+          case None    => 0
+        }
+      }
+    def compare_amount(that: Clue) = amount.compare(that.amount)
+    // end horrible! why there's no default lexical comparison?
   }
 
   case class ClueSet() extends TreeSet[Clue]{
@@ -104,4 +117,15 @@ case class Imp(val map_raw: Array[Array[Int]]){
     )
 }
 
-println(Imp(Array(Array(0,1), Array(2,3))).map)
+val imp = Imp(Array(Array(0,1), Array(2,3)))
+println(imp.map)
+val c0 = imp.Clue(1, List((0,0)))
+val c1 = imp.Clue(2, List((0,0)))
+val c2 = imp.Clue(2, List((0,1)))
+val c3 = imp.Clue(2, List((1,0)))
+println(c0.compare(c0)) //  0
+println(c0.compare(c1)) // -1
+println(c0.compare(c2)) // -1
+println(c2.compare(c1)) //  1
+println(c1.compare(c2)) // -1
+println(c2.compare(c3)) // -1
