@@ -26,10 +26,10 @@ class Minei extends AI_Interface{
 // 11211
 
 case class Imp(val map_raw: Array[Array[Int]]){
-  type Priority = Double
-  type MineSize = Int
+  type Possibility = Double
+  type MineSize    = Int
 
-  type Choices = TreeMap[Pos, Priority]
+  type Choices = TreeMap[Pos, Possibility]
   type MineMap = TreeMap[Pos, MineSize]
   // type ClueSet = TreeSet[Clue]
 
@@ -42,7 +42,7 @@ case class Imp(val map_raw: Array[Array[Int]]){
 
   case class Clue(val amount: MineSize, val poses: List[Pos])
     extends Ordered[Clue]{
-    def possibility: Double = amount.toDouble / poses.size
+    def possibility: Possibility = amount.toDouble / poses.size
     // begin horrible! why there's no default lexical comparison?
     def compare(that: Clue) =
       if(compare_amount(that) != 0){ compare_amount(that) }
@@ -73,7 +73,8 @@ case class Imp(val map_raw: Array[Array[Int]]){
   def height: Int = map_raw.head.size
 
   // pick the most priority
-  def pick: Pos = choices.max(Ordering[Priority].on[(Pos, Priority)](_._2))._1
+  def pick: Pos =
+    choices.max(Ordering[Possibility].on[(_, Possibility)](_._2))._1
 
   // all choices (available block) with calculated priority
   def choices:      Choices = map_available.foldRight(init_choices)(
