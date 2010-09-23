@@ -31,11 +31,9 @@ case class Imp(val map_raw: Array[Array[Int]]){
 
   type Choices = TreeMap[Pos, Possibility]
   type MineMap = TreeMap[Pos, MineSize]
-  // type ClueSet = TreeSet[Clue]
 
   val  Choices = TreeMap
   val  MineMap = TreeMap
-  // val  ClueSet = TreeSet
 
   type Idx = Int
   type Pos = (Idx, Idx)
