@@ -58,10 +58,12 @@ case class Imp(val map_raw: Array[Array[Int]]){
     // end horrible! why there's no default lexical comparison?
   }
 
-  case class ClueSet() extends TreeSet[Clue]{
-    def conclude: Clue = Clue(map(_.amount).min, overlap)
-    def overlap: List[Pos] = poses.tail.foldRight(poses.head)(_.intersect(_))
-    def poses: List[List[Pos]] = map(_.poses).toList
+  case class ClueSet(set: TreeSet[Clue] = TreeSet.empty[Clue]){
+    def conclude: Clue = Clue(amount, overlap)
+    def amount: Int = if(set.isEmpty){ 0 }else{ set.map(_.amount).min }
+    def overlap: List[Pos] = poses.foldRight(List[Pos]())(_.intersect(_))
+    def poses: List[List[Pos]] = set.map(_.poses).toList
+    def +(clue: Clue): ClueSet = ClueSet(set + clue)
   }
 
   val available: Int = -1
@@ -82,14 +84,12 @@ case class Imp(val map_raw: Array[Array[Int]]){
         nearby(pos_size._1, map_dug).foldRight(ClueSet())(
           (pos_size: (Pos, MineSize), set: ClueSet) =>
             (set + Clue(pos_size._2,
-                        nearby(pos_size._1, map_available).keys.toList)
-            ).asInstanceOf[ClueSet]
+                        nearby(pos_size._1, map_available).keys.toList))
         ).conclude.possibility)
   )
 
   // all choices (available block) with 0 priority
-  def init_choices: Choices = map_available.mapValues(_ => 0).
-    asInstanceOf[Choices]
+  def init_choices: Choices = TreeMap[Pos, Possibility]()
 
   // blocks that have already been dug
   def map_dug      : MineMap = map.filter(_._2 >= 1)
