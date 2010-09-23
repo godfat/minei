@@ -1,5 +1,5 @@
 
-// package org.godfat.minei
+package org.godfat.minei
 
 import org.psmonkey.product.client.mine.vo.GameInfo
 import org.psmonkey.product.server.mine.AI_Interface
@@ -10,6 +10,7 @@ import scala.collection.immutable.{TreeMap, TreeSet}
 class Minei extends AI_Interface{
   override def guess(info: GameInfo, xy: Array[Int]){
     val result = Imp(info.getMap()).pick
+    println(Imp(info.getMap()).choices)
     xy.update(0, result._1)
     xy.update(1, result._2)
   }
@@ -121,15 +122,15 @@ case class Imp(val map_raw: Array[Array[Int]]){
     )
 }
 
-val imp = Imp(Array(Array(0,1), Array(2,3)))
-println(imp.map)
-val c0 = imp.Clue(1, List((0,0)))
-val c1 = imp.Clue(2, List((0,0)))
-val c2 = imp.Clue(2, List((0,1)))
-val c3 = imp.Clue(2, List((1,0)))
-println(c0.compare(c0)) //  0
-println(c0.compare(c1)) // -1
-println(c0.compare(c2)) // -1
-println(c2.compare(c1)) //  1
-println(c1.compare(c2)) // -1
-println(c2.compare(c3)) // -1
+// val imp = Imp(Array(Array(0,1), Array(2,3)))
+// println(imp.map)
+// val c0 = imp.Clue(1, List((0,0)))
+// val c1 = imp.Clue(2, List((0,0)))
+// val c2 = imp.Clue(2, List((0,1)))
+// val c3 = imp.Clue(2, List((1,0)))
+// println(c0.compare(c0)) //  0
+// println(c0.compare(c1)) // -1
+// println(c0.compare(c2)) // -1
+// println(c2.compare(c1)) //  1
+// println(c1.compare(c2)) // -1
+// println(c2.compare(c3)) // -1
