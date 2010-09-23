@@ -40,7 +40,8 @@ case class Imp(val map_raw: Array[Array[Int]]){
 
   case class Clue(val amount: MineSize, val poses: List[Pos])
     extends Ordered[Clue]{
-    def possibility: Possibility = amount.toDouble / poses.size
+    def possibility: Possibility =
+      if(poses.isEmpty){ 0 }else{ amount.toDouble / poses.size }
     // begin horrible! why there's no default lexical comparison?
     def compare(that: Clue) =
       if(compare_amount(that) != 0){ compare_amount(that) }
