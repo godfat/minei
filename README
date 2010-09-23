@@ -22,7 +22,7 @@
 > ant devmode
 
 # build scala AI only
-> ./godfat.sh
+> ./minei.sh
 
 # build entire application (if failed build the scala AI first)
 > ant build
