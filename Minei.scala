@@ -115,13 +115,16 @@ case class Imp(val map_raw: Array[Array[Int]]){
 
   // take nearby blocks
   def nearby(pos: Pos, map: MineMap): MineMap =
-    Range(-1, 1).foldRight(map_empty)(
-      (x: Int, result: MineMap) => Range(-1, 1).foldRight(result)(
-        (y: Int, result: MineMap) =>
-          map.get((x, y)) match{
-            case Some(size) => result.updated((x, y), size) // TODO: insert?
+    Range(-1, 2).foldRight(map_empty)(
+      (x: Idx, result: MineMap) => Range(-1, 2).foldRight(result)(
+        (y: Idx, result: MineMap) => {
+          val xx = pos._1 + x
+          val yy = pos._2 + y
+          map.get((xx, yy)) match{
+            case Some(size) => result.updated((xx, yy), size) // TODO: insert?
             case _          => result
           }
+        }
       )
     )
 }
