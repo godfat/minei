@@ -30,10 +30,10 @@ case class Imp(val map_raw: Array[Array[Int]]){
   type Possibility = Double
   type MineSize    = Int
 
-  type Choices = TreeMap[Pos, Possibility]
+  type Choices = List[(Possibility, Pos)]
   type MineMap = TreeMap[Pos, MineSize]
 
-  val  Choices = TreeMap
+  val  Choices = List
   val  MineMap = TreeMap
 
   type Idx = Int
@@ -42,7 +42,7 @@ case class Imp(val map_raw: Array[Array[Int]]){
   case class Clue(val amount: MineSize, val poses: List[Pos])
     extends Ordered[Clue]{
     def possibility: Possibility =
-      if(poses.isEmpty){ 0 }else{ amount.toDouble / poses.size }
+      if(poses.isEmpty){ 0 }else{ - amount.toDouble / poses.size }
     // begin horrible! why there's no default lexical comparison?
     def compare(that: Clue) =
       if(compare_amount(that) != 0){ compare_amount(that) }
@@ -78,23 +78,22 @@ case class Imp(val map_raw: Array[Array[Int]]){
   def height: Int = map_raw.head.size
 
   // pick the most priority
-  def pick: Pos =
-    choices.max(Ordering[Possibility].on[(_, Possibility)](_._2))._1
+  def pick: Pos = choices.head._2
 
   // all choices (available block) with calculated priority
   def choices:      Choices = map_available.foldRight(init_choices)(
-    (pos_size: (Pos, MineSize), result: Choices) =>
-      result.insert(
-        pos_size._1,
-        nearby(pos_size._1, map_dug).foldRight(ClueSet())(
-          (pos_size: (Pos, MineSize), set: ClueSet) =>
-            (set + Clue(pos_size._2 - nearby(pos_size._1, map_mine).size,
-                        nearby(pos_size._1, map_available).keys.toList))
-        ).conclude.possibility)
+    (pos_size: (Pos, MineSize), result: Choices) => (
+      (nearby(pos_size._1, map_dug).foldRight(ClueSet())(
+        (pos_size: (Pos, MineSize), set: ClueSet) =>
+          (set + Clue(pos_size._2 - nearby(pos_size._1, map_mine).size,
+                      nearby(pos_size._1, map_available).keys.toList))
+       ).conclude.possibility,
+       pos_size._1) :: result
+    ).sorted
   )
 
   // all choices (available block) with 0 priority
-  def init_choices: Choices = TreeMap[Pos, Possibility]()
+  def init_choices: Choices = Choices[(Possibility, Pos)]()
 
   // blocks that have already been dug
   def map_dug      : MineMap = map.filter(_._2 >= 1)
