@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <project name="Mine" default="build" basedir=".">
   <!-- Arguments to gwtc and devmode targets -->
-  <property name="gwt.args" value="" />
+  <property name="gwt.args" value=""/>
 
   <!-- Configure path to GWT SDK -->
-  <property name="gwt.sdk" location="/Users/godfat/project/fork/mine/gwt-2.0.4" />
+  <property name="gwt.sdk" location="/Users/godfat/project/fork/mine/gwt-2.0.4"/>
 
   <path id="project.class.path">
     <pathelement location="/usr/local/lib/scala-library.jar"/>
@@ -12,6 +12,7 @@
     <pathelement location="${gwt.sdk}/gwt-user.jar"/>
     <fileset dir="${gwt.sdk}" includes="gwt-dev*.jar"/>
     <!-- Add any additional non-server libs (such as JUnit) -->
+    <fileset dir="war/WEB-INF/lib" includes="minei.jar"/>
     <fileset dir="war/WEB-INF/lib" includes="**/*.jar"/>
   </path>
 
@@ -21,14 +22,24 @@
     <!-- Add any additional server libs that need to be copied -->
   </target>
 
-  <target name="scalac" depends="libs" description="Compile scala source">
-    <mkdir dir="war/WEB-INF/classes"/>
-    <scalac srcdir="." includes="**" encoding="utf-8"
-        destdir="war/WEB-INF/classes"
-        source="1.5" target="1.5" nowarn="true"
-        debug="true" debuglevel="lines,vars,source">
-      <classpath refid="project.class.path"/>
+  <taskdef resource="scala/tools/ant/antlib.xml">
+    <classpath>
+      <pathelement location="/usr/local/lib/scala-compiler.jar"/>
+      <pathelement location="/usr/local/lib/scala-library.jar"/>
+    </classpath>
+  </taskdef>
+
+  <target name="scalac" depends="javac" description="Compile scala source">
+    <mkdir dir="pkg/classes"/>
+    <scalac srcdir="." destdir="pkg/classes"
+            classpathref="project.class.path"
+            force="never" deprecation="yes" unchecked="yes">
+      <include name="*.scala"/>
     </scalac>
+    <mkdir dir="war/WEB-INF/lib"/>
+    <jar destfile="war/WEB-INF/lib/minei.jar">
+      <fileset dir="pkg/classes"/>
+    </jar>
   </target>
 
   <target name="javac" depends="libs" description="Compile java source">
@@ -44,7 +55,7 @@
     </copy>
   </target>
 
-  <target name="gwtc" depends="javac" description="GWT compile to JavaScript">
+  <target name="gwtc" depends="javac,scalac" description="GWT compile to JavaScript">
     <java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
       <classpath>
         <pathelement location="src"/>
@@ -58,7 +69,7 @@
     </java>
   </target>
 
-  <target name="devmode" depends="javac" description="Run development mode">
+  <target name="devmode" depends="javac,scalac" description="Run development mode">
     <java failonerror="true" fork="true" classname="com.google.gwt.dev.DevMode">
       <classpath>
         <pathelement location="src"/>
