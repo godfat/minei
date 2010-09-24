@@ -56,7 +56,7 @@ case class Imp(val map_raw: Array[Array[Int]]){
         }
       }
     def compare_amount(that: Clue) = amount.compare(that.amount)
-    // end horrible! why there's no default lexical comparison?
+    //   end horrible! why there's no default lexical comparison?
   }
 
   case class ClueSet(set: TreeSet[Clue] = TreeSet.empty[Clue]){
