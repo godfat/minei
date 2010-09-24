@@ -88,7 +88,7 @@ case class Imp(val map_raw: Array[Array[Int]]){
         pos_size._1,
         nearby(pos_size._1, map_dug).foldRight(ClueSet())(
           (pos_size: (Pos, MineSize), set: ClueSet) =>
-            (set + Clue(pos_size._2,
+            (set + Clue(pos_size._2 - nearby(pos_size._1, map_mine).size,
                         nearby(pos_size._1, map_available).keys.toList))
         ).conclude.possibility)
   )
