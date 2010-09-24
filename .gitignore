@@ -5,4 +5,4 @@
 !/godfat.sh
 !/README
 
-!/war/WEB-INF/classes/org/godfat/mine/*.class
+!/war/WEB-INF/lib/minei.jar
