@@ -49,6 +49,13 @@ case class Imp(val map_raw: Array[Array[Int]]){
     // we want descendant ordering, so use negative numbers
     def possibility: Possibility =
       if(poses.isEmpty){ 0 }else{ - amount.toDouble / poses.size }
+
+    def combos(x: Int = poses.size, y: Int = amount): Int =
+      factorial(x, x - y + 1) / factorial(y)
+
+    def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
+    def -(that: Clue) = Clue(amount - that.amount, poses.diff(that.poses))
+
     // begin horrible! why there's no default lexical comparison?
     def compare(that: Clue) =
       if(compare_amount(that) != 0){ compare_amount(that) }
@@ -65,10 +72,28 @@ case class Imp(val map_raw: Array[Array[Int]]){
     //   end horrible! why there's no default lexical comparison?
   }
 
+  class DeducedClue(override val possibility: Possibility)
+    extends Clue(0, List[Pos]())
+  def DeducedClue(possibility: Possibility) = new DeducedClue(possibility)
+
   // set is used to filter the same clues
   case class ClueSet(pos: Pos, set: TreeSet[Clue] = TreeSet.empty[Clue]){
-    def conclude: Clue = Clue(amount, overlap)
-    def amount: Int = if(set.isEmpty){ 0 }else{ set.map(_.amount).min }
+    def conclude: Clue =
+      set.find((c: Clue) => c.amount == poses.size) match{
+        case Some(c) => c
+        case None    => DeducedClue(calculate_possibility)
+      }
+      // Clue(amount, overlap)
+    // def amount: Int = if(set.isEmpty){ 0 }else{ set.map(_.amount).min }
+    def calculate_possibility: Possibility = {
+      // val clue_combos = set.foldRight(1)(
+      //   (clue: Clue, result: Int) =>
+      //     (clue - Clue(...)).combo * result
+      // )
+      // ? / clue_combos + overlap_combos
+      1
+    }
+
     def overlap: List[Pos] =
       if(poses.isEmpty) List()
       else              poses.tail.foldRight(poses.head)(_.intersect(_))
