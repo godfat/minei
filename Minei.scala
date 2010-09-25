@@ -69,10 +69,8 @@ case class Imp(val map_raw: Array[Array[Int]]){
     def conclude: Clue = Clue(amount, overlap)
     def amount: Int = if(set.isEmpty){ 0 }else{ set.map(_.amount).min }
     def overlap: List[Pos] =
-      if(poses.isEmpty)
-        List()
-      else
-        poses.tail.foldRight(poses.head)(_.intersect(_))
+      if(poses.isEmpty) List()
+      else              poses.tail.foldRight(poses.head)(_.intersect(_))
     def poses: List[List[Pos]] = set.map(_.poses).toList
     def +(clue: Clue): ClueSet = ClueSet(set + clue)
   }
