@@ -26,6 +26,11 @@ class Minei extends AI_Interface{
 // 1x?x?
 // 11211
 
+// --00-
+// x-?3-
+// x4?xx
+// x-x--
+
 case class Imp(val map_raw: Array[Array[Int]]){
   type Possibility = Double
   type MineSize    = Int
