@@ -65,14 +65,15 @@ case class Imp(val map_raw: Array[Array[Int]]){
     //   end horrible! why there's no default lexical comparison?
   }
 
-  case class ClueSet(set: TreeSet[Clue] = TreeSet.empty[Clue]){
+  // set is used to filter the same clues
+  case class ClueSet(pos: Pos, set: TreeSet[Clue] = TreeSet.empty[Clue]){
     def conclude: Clue = Clue(amount, overlap)
     def amount: Int = if(set.isEmpty){ 0 }else{ set.map(_.amount).min }
     def overlap: List[Pos] =
       if(poses.isEmpty) List()
       else              poses.tail.foldRight(poses.head)(_.intersect(_))
     def poses: List[List[Pos]] = set.map(_.poses).toList
-    def +(clue: Clue): ClueSet = ClueSet(set + clue)
+    def +(clue: Clue): ClueSet = ClueSet(pos, set + clue)
   }
 
   val available: Int = -1
@@ -86,14 +87,14 @@ case class Imp(val map_raw: Array[Array[Int]]){
 
   // all choices (available block) with calculated priority
   def choices:      Choices = map_available.foldRight(init_choices)(
-    (pos_size: (Pos, MineSize), result: Choices) => (
-      (nearby(pos_size._1, map_dug).foldRight(ClueSet())(
+    (pos_size: (Pos, MineSize), result: Choices) => ({
+      val pos: Pos = pos_size._1
+      val clue_set = nearby(pos, map_dug).foldRight(ClueSet(pos))(
         (pos_size: (Pos, MineSize), set: ClueSet) =>
           (set + Clue(pos_size._2 - nearby(pos_size._1, map_mine).size,
-                      nearby(pos_size._1, map_available).keys.toList))
-       ).conclude.possibility,
-       pos_size._1) :: result
-    ).sorted
+                      nearby(pos_size._1, map_available).keys.toList)))
+      (clue_set.conclude.possibility, pos_size._1) :: result
+    }).sorted
   )
 
   // all choices (available block) with 0 priority
