@@ -46,6 +46,7 @@ case class Imp(val map_raw: Array[Array[Int]]){
 
   case class Clue(val amount: MineSize, val poses: List[Pos])
     extends Ordered[Clue]{
+    // we want descendant ordering, so use negative numbers
     def possibility: Possibility =
       if(poses.isEmpty){ 0 }else{ - amount.toDouble / poses.size }
     // begin horrible! why there's no default lexical comparison?
