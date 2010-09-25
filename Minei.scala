@@ -111,16 +111,16 @@ case class Imp(val map_raw: Array[Array[Int]]){
 
   // our map data structure
   def map: MineMap =
-    Range(0, width).foldRight(map_empty)(
-      (x: Idx, m: MineMap) => Range(0, height).foldRight(m)(
+    0.until(width).foldRight(map_empty)(
+      (x: Idx, m: MineMap) => 0.until(height).foldRight(m)(
         (y: Idx, m: MineMap) => m.insert((x, y), map_raw(x)(y))
       )
     )
 
   // take nearby blocks
   def nearby(pos: Pos, map: MineMap): MineMap =
-    Range(-1, 2).foldRight(map_empty)(
-      (x: Idx, result: MineMap) => Range(-1, 2).foldRight(result)(
+    (-1).to(1).foldRight(map_empty)(
+      (x: Idx, result: MineMap) => (-1).to(1).foldRight(result)(
         (y: Idx, result: MineMap) => {
           val xx = pos._1 + x
           val yy = pos._2 + y
