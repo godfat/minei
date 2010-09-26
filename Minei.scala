@@ -63,6 +63,8 @@ case class Imp(val map_raw: Array[Array[Int]]){
 
     def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
     def -(that: Clue) = Clue(amount - that.amount, poses.diff(that.poses))
+    def +(that: Clue) = Clue(amount + that.amount, (poses ++ that.poses).
+                                                     distinct)
 
     // begin horrible! why there's no default lexical comparison?
     def compare(that: Clue) =
