@@ -55,8 +55,11 @@ case class Imp(val map_raw: Array[Array[Int]]){
     def possibility: Possibility =
       if(poses.isEmpty) 0 else - amount.toDouble / poses.size
 
-    def combos(x: Int = poses.size, y: Int = amount): Int =
-      factorial(x, x - y + 1) / factorial(y)
+    def combos: Int = {
+      val n = poses.size
+      val k = amount
+      factorial(n, n - k + 1) / factorial(k)
+    }
 
     def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
     def -(that: Clue) = Clue(amount - that.amount, poses.diff(that.poses))
