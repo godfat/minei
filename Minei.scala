@@ -118,9 +118,10 @@ case class Imp(val map_raw: Array[Array[Int]]){
         ) + overlap.size).min
 
       val combos: Int =
-        min.to(max).foldRight(0)( (size: MineSize, combos: Int) =>
-          Clue(size, overlap).combos * exclusive_combos(Clue(size, overlap)) +
-          combos)
+        min.to(max).foldRight(0)( (size: MineSize, combos: Int) => {
+          val overlap_clue = Clue(size, overlap)
+          overlap_clue.combos * exclusive_combos(overlap_clue) + combos
+        })
 
       val combos_hit: Int =
         List(min, 1).max.to(max).foldRight(0)(
