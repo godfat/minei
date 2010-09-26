@@ -152,7 +152,7 @@ case class Imp(val map_raw: Array[Array[Int]]){
   }
 
   val available: Int = -1
-  val mine     : Int = -8
+  val mine     : Int =  9
 
   def width : Int = map_raw.size
   def height: Int = map_raw.head.size
@@ -185,7 +185,7 @@ case class Imp(val map_raw: Array[Array[Int]]){
   // blocks that we need to examine
   def map_available: MineMap = map.filter(_._2 == available)
   // blocks that contain a mine
-  def map_mine     : MineMap = map.filter(_._2 == mine)
+  def map_mine     : MineMap = map.filter(_._2.abs == mine)
   // an empty mine map
   def map_empty    : MineMap = MineMap[Pos, MineSize]()
 
