@@ -1,32 +1,32 @@
 
+# 0.1.0
 # MineSweeper AI for PsMonkey's GWT MineSweeper
 
-# setup for people who don't have scala installed.
-> wget http://github.com/godfat/minei/raw/master/war/WEB-INF/classes/org/godfat/minei/Minei.class
-# the source of the class is here:
+# --- setup for people who don't have scala installed.
+> wget http://github.com/godfat/minei/raw/master/war/WEB-INF/lib/minei.jar
+# the source of the jar is here:
 # http://github.com/godfat/minei/blob/master/Minei.scala
 
-# move the AI class to war/
-> mkdir -p war/WEB-INF/classes/org/godfat/minei/
-> mv Godfat.class war/WEB-INF/classes/org/godfat/minei/
+# move the AI jar to war/
+> mv minei.jar war/WEB-INF/lib
 
 # get scala-library.jar
 > wget http://www.scala-lang.org/downloads/distrib/files/scala-2.8.0.final.tgz
 > tar -zxf scala-2.8.0.final.tgz
 > mv scala-2.8.0.final/lib/scala-library.jar war/WEB-INF/lib
-# remember to include scala-library.jar to classpath
 
-# ---
+# --- setup for people who want to compile the source themselves.
 
-# start GWT devmode
+# start GWT devmode with my build.xml, it depends on scalac task
 > ant devmode
 
 # build scala AI only
-> ./minei.sh
+> ant scalac
 
-# build entire application (if failed build the scala AI first)
+# build entire application
 > ant build
 
-# paths need to be setup
+# paths need to be setup in build.xml
 # gwt.sdk: /Users/godfat/project/fork/mine/gwt-2.0.4
 # scala-library: /usr/local/lib/scala-library.jar
+# scala-compiler: /usr/local/lib/scala-compiler.jar
