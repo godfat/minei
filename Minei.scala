@@ -102,18 +102,51 @@ case class Imp(val map_raw: Array[Array[Int]]){
     // remove useless clue
     def compact: ClueSet = ClueSet(pos, set.filter(_.amount > 0))
 
+    // TODO: we haven't considered complex overlap,
+    //       say A overlaps with B,
+    //           B overlaps with C, and
+    //           A didn't overlap with C
     def calculate_possibility: Possibility = {
-      // val clue_combos = set.foldRight(1)(
-      //   (clue: Clue, result: Int) =>
-      //     (clue - Clue(...)).combo * result
-      // )
-      // ? / clue_combos + overlap_combos
-      1
+      val min: MineSize =
+        (set.map((clue) => clue.amount - (clue.poses.size - overlap.size)
+        ) +            0).max
+
+      val max: MineSize =
+        (set.map((clue) => clue.amount
+        ) + overlap.size).min
+
+      val combos: Int =
+        min.to(max).foldRight(0)( (size: MineSize, combos: Int) =>
+          Clue(size, overlap).combos * exclusive_combos(Clue(size, overlap)) +
+          combos)
+
+      val combos_hit: Int =
+        List(min, 1).max.to(max).foldRight(0)(
+          (size: MineSize, combos: Int) =>
+            Clue(size - 1, exclusive_overlap).combos *
+              exclusive_combos(Clue(size - 1, exclusive_overlap)) + combos)
+
+      print(pos)
+      print(": possibility: ")
+      print(combos_hit)
+      print(" / ")
+      println(combos)
+      println(set)
+
+      if(combos == 0) 0
+      else            combos_hit.toDouble / combos
     }
 
     def overlap: List[Pos] =
       if(poses.isEmpty) List()
       else              poses.tail.foldRight(poses.head)(_.intersect(_))
+
+    def exclusive_overlap: List[Pos] = overlap.filter(_ != pos)
+
+    def exclusive_combos(overlap_clue: Clue): Int =
+      set.foldRight(1)( (clue: Clue, combos: Int) =>
+        (clue - overlap_clue).combos * combos)
+
     def poses: List[List[Pos]] = set.map(_.poses).toList
     def +(clue: Clue): ClueSet = ClueSet(pos, set + clue)
   }
