@@ -78,6 +78,8 @@
       <jvmarg value="-Xmx256M"/>
       <arg value="-startupUrl"/>
       <arg value="mine.html"/>
+      <arg value="-bindAddress"/>
+      <arg value="0.0.0.0"/>
       <!-- Additional arguments like -style PRETTY or -logLevel DEBUG -->
       <arg line="${gwt.args}"/>
       <arg value="org.psmonkey.product.Mine"/>
