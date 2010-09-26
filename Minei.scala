@@ -88,13 +88,20 @@ case class Imp(val map_raw: Array[Array[Int]]){
 
   // set is used to filter the same clues
   case class ClueSet(pos: Pos, set: TreeSet[Clue] = TreeSet.empty[Clue]){
-    def conclude: Clue =
-      set.find((c: Clue) => c.amount == poses.size) match{
-        case Some(c) => c
-        case None    => DeducedClue(calculate_possibility)
-      }
-      // Clue(amount, overlap)
-    // def amount: Int = if(set.isEmpty){ 0 }else{ set.map(_.amount).min }
+    def conclude: Clue = compact.conclude_compacted
+    // conclude after compact
+    def conclude_compacted: Clue =
+      if(set.isEmpty)
+        DeducedClue(0)
+      else
+        set.find((c: Clue) => c.amount == c.poses.size) match{
+          case Some(c) => c
+          case None    => DeducedClue(- calculate_possibility)
+        }
+
+    // remove useless clue
+    def compact: ClueSet = ClueSet(pos, set.filter(_.amount > 0))
+
     def calculate_possibility: Possibility = {
       // val clue_combos = set.foldRight(1)(
       //   (clue: Clue, result: Int) =>
