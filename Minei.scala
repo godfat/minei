@@ -123,11 +123,15 @@ case class Imp(val map_raw: Array[Array[Int]]){
           overlap_clue.combos * exclusive_combos(overlap_clue) + combos
         })
 
+      val min_hit = List(min, 1).max
+
       val combos_hit: Int =
-        List(min, 1).max.to(max).foldRight(0)(
-          (size: MineSize, combos: Int) =>
-            Clue(size - 1, exclusive_overlap).combos *
-              exclusive_combos(Clue(size - 1, exclusive_overlap)) + combos)
+        min_hit.to(max).foldRight(0)( (size: MineSize, combos: Int) => {
+          val exclusive_clue = Clue(size - 1, exclusive_overlap)
+          val hit = Clue(1, List(pos))
+          exclusive_clue.combos * exclusive_combos(exclusive_clue +
+                                                   hit) + combos
+        })
 
       print(pos)
       print(": possibility: ")
