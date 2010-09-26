@@ -10,7 +10,7 @@ import scala.collection.immutable.{TreeMap, TreeSet}
 class Minei extends AI_Interface{
   override def guess(info: GameInfo, xy: Array[Int]){
     val result = Imp(info.getMap()).pick
-    println(Imp(info.getMap()).choices)
+    println(Imp(info.getMap()).choices.filter(_._1 < 0.0))
     xy.update(0, result._1)
     xy.update(1, result._2)
   }
