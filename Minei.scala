@@ -53,7 +53,7 @@ case class Imp(val map_raw: Array[Array[Int]]){
     extends Ordered[Clue]{
     // we want descendant ordering, so use negative numbers
     def possibility: Possibility =
-      if(poses.isEmpty){ 0 }else{ - amount.toDouble / poses.size }
+      if(poses.isEmpty) 0 else - amount.toDouble / poses.size
 
     def combos(x: Int = poses.size, y: Int = amount): Int =
       factorial(x, x - y + 1) / factorial(y)
