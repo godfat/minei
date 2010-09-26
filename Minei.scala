@@ -66,16 +66,18 @@ case class Imp(val map_raw: Array[Array[Int]]){
 
     // begin horrible! why there's no default lexical comparison?
     def compare(that: Clue) =
-      if(compare_amount(that) != 0){ compare_amount(that) }
-      else if(poses.size != that.poses.size){
+      if(compare_amount(that) != 0)
+        compare_amount(that)
+
+      else if(poses.size != that.poses.size)
         poses.size.compare(that.poses.size)
-      }
-      else{
+
+      else
         poses.zip(that.poses).find( (p: (Pos, Pos)) => p._1 != p._2 ) match{
           case Some(p) => Ordering[Pos].compare(p._1, p._2)
           case None    => 0
         }
-      }
+
     def compare_amount(that: Clue) = amount.compare(that.amount)
     //   end horrible! why there's no default lexical comparison?
   }
