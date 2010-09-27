@@ -43,8 +43,8 @@ case class Imp(val map_raw: Array[Array[Int]]){
   type Choices = List[(Possibility, Pos)]
   type MineMap = TreeMap[Pos, MineSize]
 
-  val  Choices = List
-  val  MineMap = TreeMap
+  lazy val  Choices = List
+  lazy val  MineMap = TreeMap
 
   type Idx = Int
   type Pos = (Idx, Idx)
@@ -52,10 +52,10 @@ case class Imp(val map_raw: Array[Array[Int]]){
   case class Clue(val amount: MineSize, val poses: List[Pos])
     extends Ordered[Clue]{
     // we want descendant ordering, so use negative numbers
-    def possibility: Possibility =
+    lazy val possibility: Possibility =
       if(poses.isEmpty) 0 else - amount.toDouble / poses.size
 
-    def combos: Int = {
+    lazy val combos: Int = {
       val n = poses.size
       val k = amount
       factorial(n, n - k + 1) / factorial(k)
@@ -88,25 +88,26 @@ case class Imp(val map_raw: Array[Array[Int]]){
 
   // set is used to filter the same clues
   case class ClueSet(pos: Pos, set: TreeSet[Clue] = TreeSet.empty[Clue]){
-    def conclude: Clue = compact.conclude_compacted
+    lazy val poses: List[List[Pos]] = set.map(_.poses).toList
+    lazy val conclude: Clue = compact.conclude_compacted
     // conclude after compact
-    def conclude_compacted: Clue =
+    lazy val conclude_compacted: Clue =
       if(set.isEmpty)
         DeducedClue(0)
       else
         set.find((c: Clue) => c.amount == c.poses.size) match{
           case Some(c) => c
-          case None    => DeducedClue(- calculate_possibility)
+          case None    => DeducedClue(- possibility)
         }
 
     // remove useless clue
-    def compact: ClueSet = ClueSet(pos, set.filter(_.amount > 0))
+    lazy val compact: ClueSet = ClueSet(pos, set.filter(_.amount > 0))
 
     // TODO: we haven't considered complex overlap,
     //       say A overlaps with B,
     //           B overlaps with C, and
     //           A didn't overlap with C
-    def calculate_possibility: Possibility = {
+    lazy val possibility: Possibility = {
       val min: MineSize =
         (set.map((clue) => clue.amount - (clue.poses.size - overlap.size)
         ) +            0).max
@@ -131,39 +132,38 @@ case class Imp(val map_raw: Array[Array[Int]]){
           overlap_clue_hit.combos * exclusive_combos(overlap_clue) + combos
         })
 
-      // print(pos)
-      // print(": possibility: ")
-      // print(combos_hit)
-      // print(" / ")
-      // println(combos)
-      // println(set)
+      print(pos)
+      print(": possibility: ")
+      print(combos_hit)
+      print(" / ")
+      println(combos)
+      println(set)
 
       if(combos == 0) 0
       else            combos_hit.toDouble / combos
     }
 
-    def overlap: List[Pos] =
+    lazy val overlap: List[Pos] =
       if(poses.isEmpty) List()
       else              poses.tail.foldRight(poses.head)(_.intersect(_))
 
-    def exclusive_overlap: List[Pos] = overlap.filter(_ != pos)
+    lazy val exclusive_overlap: List[Pos] = overlap.filter(_ != pos)
 
     def exclusive_combos(overlap_clue: Clue): Int =
       set.foldRight(1)( (clue: Clue, combos: Int) =>
         (clue - overlap_clue).combos * combos)
 
-    def poses: List[List[Pos]] = set.map(_.poses).toList
     def +(clue: Clue): ClueSet = ClueSet(pos, set + clue)
   }
 
-  val available: Int = -1
-  val mine     : Int =  9
+  lazy val available: Int = -1
+  lazy val mine     : Int =  9
 
-  def width : Int = map_raw.size
-  def height: Int = map_raw.head.size
+  lazy val width : Int = map_raw.size
+  lazy val height: Int = map_raw.head.size
 
   // pick the most priority
-  def pick: Pos = // choices.head._2 // perfect pick is not yet done
+  lazy val pick: Pos = // choices.head._2 // perfect pick is not yet done
     {
       val good = choices.filter(_._1 >= -1).filter(_._1 <= -0.5)
       if(good.isEmpty) choices.last._2
@@ -171,7 +171,7 @@ case class Imp(val map_raw: Array[Array[Int]]){
     }
 
   // all choices (available block) with calculated priority
-  def choices:      Choices = map_available.foldRight(init_choices)(
+  lazy val choices:      Choices = map_available.foldRight(init_choices)(
     (pos_size: (Pos, MineSize), result: Choices) => ({
       val pos: Pos = pos_size._1
       val clue_set = nearby(pos, map_dug).foldRight(ClueSet(pos))(
@@ -183,19 +183,19 @@ case class Imp(val map_raw: Array[Array[Int]]){
   )
 
   // all choices (available block) with 0 priority
-  def init_choices: Choices = Choices[(Possibility, Pos)]()
+  lazy val init_choices: Choices = Choices[(Possibility, Pos)]()
 
   // blocks that have already been dug
-  def map_dug      : MineMap = map.filter(_._2 >= 1)
+  lazy val map_dug      : MineMap = map.filter(_._2 >= 1)
   // blocks that we need to examine
-  def map_available: MineMap = map.filter(_._2 == available)
+  lazy val map_available: MineMap = map.filter(_._2 == available)
   // blocks that contain a mine
-  def map_mine     : MineMap = map.filter(_._2.abs == mine)
+  lazy val map_mine     : MineMap = map.filter(_._2.abs == mine)
   // an empty mine map
-  def map_empty    : MineMap = MineMap[Pos, MineSize]()
+  lazy val map_empty    : MineMap = MineMap[Pos, MineSize]()
 
   // our map data structure
-  def map: MineMap =
+  lazy val map: MineMap =
     0.until(width).foldRight(map_empty)(
       (x: Idx, m: MineMap) => 0.until(height).foldRight(m)(
         (y: Idx, m: MineMap) => m.insert((x, y), map_raw(x)(y))
