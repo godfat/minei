@@ -62,16 +62,7 @@ case class Imp(val map_raw: Array[Array[Int]]){
     }
 
     def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
-
-    def -(that: Clue) =
-      if(exclusive(that)) this
-      else                Clue(amount - that.amount, poses.diff(that.poses))
-
-    def exclusive(that: Clue): Boolean =
-      poses.find((pos) => that.poses.contains(pos)) match{
-        case Some(p) => false
-        case None    => true
-      }
+    def -(that: Clue) = Clue(amount - that.amount, poses.diff(that.poses))
 
     // begin horrible! why there's no default lexical comparison?
     def compare(that: Clue) =
