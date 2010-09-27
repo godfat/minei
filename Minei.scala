@@ -161,16 +161,15 @@ case class Imp(val map_raw: Array[Array[Int]]){
   lazy val width : Int = map_raw.size
   lazy val height: Int = map_raw.head.size
 
-  // pick the most priority
-  lazy val pick: Pos = // choices.head._2 // perfect pick is not yet done
-    {
-      val good = choices.filter(_._1 <= -0.5)
-      if(good.isEmpty) choices.last._2
-      else                good.head._2
-    }
+  // pick the best result
+  lazy val pick: Pos =
+    if(choices50.isEmpty) choices  .last._2
+    else                  choices50.head._2
+
+  lazy val choices50: Choices = choices.filter(_._1 <= -0.5)
 
   // all choices (available block) with calculated priority
-  lazy val choices:      Choices = map_available.foldRight(init_choices)(
+  lazy val choices: Choices = map_available.foldRight(init_choices)(
     (pos_size: (Pos, MineSize), result: Choices) => ({
       val pos: Pos = pos_size._1
       val clue_set = nearby(pos, map_dug).foldRight(ClueSet(pos))(
