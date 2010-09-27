@@ -62,9 +62,16 @@ case class Imp(val map_raw: Array[Array[Int]]){
     }
 
     def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
-    def -(that: Clue) = Clue(amount - that.amount, poses.diff(that.poses))
-    def +(that: Clue) = Clue(amount + that.amount, (poses ++ that.poses).
-                                                     distinct)
+
+    def -(that: Clue) =
+      if(exclusive(that)) this
+      else                Clue(amount - that.amount, poses.diff(that.poses))
+
+    def exclusive(that: Clue): Boolean =
+      poses.find((pos) => that.poses.contains(pos)) match{
+        case Some(p) => false
+        case None    => true
+      }
 
     // begin horrible! why there's no default lexical comparison?
     def compare(that: Clue) =
@@ -120,18 +127,17 @@ case class Imp(val map_raw: Array[Array[Int]]){
       val combos: Int =
         min.to(max).foldRight(0)( (size: MineSize, combos: Int) => {
           val overlap_clue = Clue(size, overlap)
-          overlap_clue.combos * exclusive_combos(overlap_clue) + combos
+          overlap_clue    .combos * exclusive_combos(overlap_clue) + combos
         })
 
       val min_hit = List(min, 1).max
 
       val combos_hit: Int =
         min_hit.to(max).foldRight(0)( (size: MineSize, combos: Int) => {
-          val hit = Clue(1, List(pos))
-          val hit_size = if(overlap.contains(hit)) 1 else 0
-          val exclusive_clue = Clue(size - hit_size, exclusive_overlap)
-          exclusive_clue.combos * exclusive_combos(exclusive_clue +
-                                                   hit) + combos
+          val overlap_clue     = Clue(size, overlap)
+          val overlap_clue_hit = overlap_clue - Clue(1, List(pos))
+
+          overlap_clue_hit.combos * exclusive_combos(overlap_clue) + combos
         })
 
       // print(pos)
