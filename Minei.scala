@@ -108,30 +108,6 @@ case class Imp(val map_raw: Array[Array[Int]]){
     //           B overlaps with C, and
     //           A didn't overlap with C
     lazy val possibility: Possibility = {
-      val min: MineSize =
-        (set.map((clue) => clue.amount - (clue.poses.size - overlap.size)
-        ) +            0).max
-
-      val max: MineSize =
-        (set.map((clue) => clue.amount
-        ) + overlap.size).min
-
-      val combos: Int =
-        min.to(max).foldRight(0)( (size: MineSize, combos: Int) => {
-          val overlap_clue = Clue(size, overlap)
-          overlap_clue    .combos * exclusive_combos(overlap_clue) + combos
-        })
-
-      val min_hit = List(min, 1).max
-
-      val combos_hit: Int =
-        min_hit.to(max).foldRight(0)( (size: MineSize, combos: Int) => {
-          val overlap_clue     = Clue(size, overlap)
-          val overlap_clue_hit = overlap_clue - Clue(1, List(pos))
-
-          overlap_clue_hit.combos * exclusive_combos(overlap_clue) + combos
-        })
-
       print(pos)
       print(": possibility: ")
       print(combos_hit)
@@ -139,9 +115,32 @@ case class Imp(val map_raw: Array[Array[Int]]){
       println(combos)
       println(set)
 
-      if(combos == 0) 0
-      else            combos_hit.toDouble / combos
+      if(combos == 0) 0 else combos_hit.toDouble / combos
     }
+
+    lazy val combos: Int =
+      min.to(max).foldRight(0)( (size: MineSize, combos: Int) => {
+        val overlap_clue = Clue(size, overlap)
+        overlap_clue    .combos * exclusive_combos(overlap_clue) + combos
+      })
+
+    lazy val combos_hit: Int =
+      min_hit.to(max).foldRight(0)( (size: MineSize, combos: Int) => {
+        val overlap_clue     = Clue(size, overlap)
+        val overlap_clue_hit = overlap_clue - Clue(1, List(pos))
+
+        overlap_clue_hit.combos * exclusive_combos(overlap_clue) + combos
+      })
+
+    lazy val min_hit = List(min, 1).max
+
+    lazy val min: MineSize =
+      (set.map((clue) => clue.amount - (clue.poses.size - overlap.size)
+      ) +            0).max
+
+    lazy val max: MineSize =
+      (set.map((clue) => clue.amount
+      ) + overlap.size).min
 
     lazy val overlap: List[Pos] =
       if(poses.isEmpty) List()
