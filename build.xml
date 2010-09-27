@@ -18,7 +18,7 @@
 
   <target name="libs" description="Copy libs to WEB-INF/lib">
     <mkdir dir="war/WEB-INF/lib" />
-    <copy todir="war/WEB-INF/lib" file="${gwt.sdk}/gwt-servlet.jar" />
+    <copy todir="war/WEB-INF/lib" file="${gwt.sdk}/gwt-servlet.jar"/>
     <!-- Add any additional server libs that need to be copied -->
   </target>
 
@@ -30,16 +30,22 @@
   </taskdef>
 
   <target name="scalac" depends="javac" description="Compile scala source">
-    <mkdir dir="pkg/classes"/>
-    <scalac srcdir="." destdir="pkg/classes"
+    <mkdir dir="war/WEB-INF/classes/godfat/org/minei"/>
+    <copy todir="src/org/godfat/minei" file="Minei.scala"/>
+    <scalac srcdir="src" destdir="war/WEB-INF/classes"
             classpathref="project.class.path"
             force="never" deprecation="yes" unchecked="yes">
-      <include name="*.scala"/>
+      <include name="**/*.scala"/>
     </scalac>
-    <mkdir dir="war/WEB-INF/lib"/>
+    <mkdir dir="pkg/classes/org/godfat"/>
+    <copy todir="pkg/classes/org/godfat">
+      <fileset dir="war/WEB-INF/classes/org/godfat"/>
+    </copy>
     <jar destfile="war/WEB-INF/lib/minei.jar">
       <fileset dir="pkg/classes"/>
     </jar>
+    <mkdir dir="pkg/lib"/>
+    <copy todir="pkg/lib" file="war/WEB-INF/lib/minei.jar"/>
   </target>
 
   <target name="javac" depends="libs" description="Compile java source">
