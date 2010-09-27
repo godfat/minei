@@ -44,8 +44,7 @@
     <jar destfile="war/WEB-INF/lib/minei.jar">
       <fileset dir="pkg/classes"/>
     </jar>
-    <mkdir dir="pkg/lib"/>
-    <copy todir="pkg/lib" file="war/WEB-INF/lib/minei.jar"/>
+    <copy todir="." file="war/WEB-INF/lib/minei.jar"/>
   </target>
 
   <target name="javac" depends="libs" description="Compile java source">
