@@ -164,7 +164,7 @@ case class Imp(val map_raw: Array[Array[Int]]){
   // pick the most priority
   lazy val pick: Pos = // choices.head._2 // perfect pick is not yet done
     {
-      val good = choices.filter(_._1 >= -1).filter(_._1 <= -0.5)
+      val good = choices.filter(_._1 <= -0.5)
       if(good.isEmpty) choices.last._2
       else                good.head._2
     }
