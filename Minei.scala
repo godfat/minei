@@ -52,7 +52,7 @@ case class Imp(val map_raw: Array[Array[Int]]){
   case class Clue(val amount: MineSize, val poses: List[Pos])
     extends Ordered[Clue]{
     // we want descendant ordering, so use negative numbers
-    lazy val possibility: Possibility =
+    val possibility: Possibility =
       if(poses.isEmpty) 0 else - amount.toDouble / poses.size
 
     lazy val combos: Int = {
