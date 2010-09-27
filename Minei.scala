@@ -9,10 +9,12 @@ import scala.collection.immutable.{TreeMap, TreeSet}
 
 class Minei extends AI_Interface{
   override def guess(info: GameInfo, xy: Array[Int]){
-    val result = Imp(info.getMap()).pick
-    // println(Imp(info.getMap()).choices.filter(_._1 < 0.0))
-    xy.update(0, result._1)
-    xy.update(1, result._2)
+    Imp(info.getMap()).debug.fireball match{
+      case (x, y) => {
+        xy.update(0, x)
+        xy.update(1, y)
+      }
+    }
   }
 }
 
@@ -37,6 +39,11 @@ class Minei extends AI_Interface{
 // 11??
 
 case class Imp(val map_raw: Array[Array[Int]]){
+  def debug: Imp = {
+    println(choices.filter(_._1 < 0.0))
+    return this
+  }
+
   type Possibility = Double
   type MineSize    = Int
 
@@ -65,9 +72,10 @@ case class Imp(val map_raw: Array[Array[Int]]){
     def -(that: Clue) = Clue(amount - that.amount, poses.diff(that.poses))
 
     // begin horrible! why there's no default lexical comparison?
-    def compare(that: Clue) =
-      if(compare_amount(that) != 0)
-        compare_amount(that)
+    def compare(that: Clue) = {
+      val amount_compare: Int = amount.compare(that.amount)
+      if(amount_compare != 0)
+        amount_compare
 
       else if(poses.size != that.poses.size)
         poses.size.compare(that.poses.size)
@@ -77,8 +85,7 @@ case class Imp(val map_raw: Array[Array[Int]]){
           case Some(p) => Ordering[Pos].compare(p._1, p._2)
           case None    => 0
         }
-
-    def compare_amount(that: Clue) = amount.compare(that.amount)
+    }
     //   end horrible! why there's no default lexical comparison?
   }
 
@@ -88,6 +95,16 @@ case class Imp(val map_raw: Array[Array[Int]]){
 
   // set is used to filter the same clues
   case class ClueSet(pos: Pos, set: TreeSet[Clue] = TreeSet.empty[Clue]){
+    def debug: ClueSet = {
+      print(pos)
+      print(": possibility: ")
+      print(combos_hit)
+      print(" / ")
+      println(combos)
+      println(set)
+      return this
+    }
+
     lazy val poses: List[List[Pos]] = set.map(_.poses).toList
     lazy val conclude: Clue = compact.conclude_compacted
     // conclude after compact
@@ -107,16 +124,8 @@ case class Imp(val map_raw: Array[Array[Int]]){
     //       say A overlaps with B,
     //           B overlaps with C, and
     //           A didn't overlap with C
-    lazy val possibility: Possibility = {
-      print(pos)
-      print(": possibility: ")
-      print(combos_hit)
-      print(" / ")
-      println(combos)
-      println(set)
-
+    lazy val possibility: Possibility =
       if(combos == 0) 0 else combos_hit.toDouble / combos
-    }
 
     lazy val combos: Int =
       min.to(max).foldRight(0)( (size: MineSize, combos: Int) => {
@@ -161,25 +170,6 @@ case class Imp(val map_raw: Array[Array[Int]]){
   lazy val width : Int = map_raw.size
   lazy val height: Int = map_raw.head.size
 
-  // pick the best result
-  lazy val pick: Pos =
-    if(choices50.isEmpty) choices  .last._2
-    else                  choices50.head._2
-
-  lazy val choices50: Choices = choices.filter(_._1 <= -0.5)
-
-  // all choices (available block) with calculated priority
-  lazy val choices: Choices = map_available.foldRight(init_choices)(
-    (pos_size: (Pos, MineSize), result: Choices) => ({
-      val pos: Pos = pos_size._1
-      val clue_set = nearby(pos, map_dug).foldRight(ClueSet(pos))(
-        (pos_size: (Pos, MineSize), set: ClueSet) =>
-          (set + Clue(pos_size._2 - nearby(pos_size._1, map_mine).size,
-                      nearby(pos_size._1, map_available).keys.toList)))
-      (clue_set.conclude.possibility, pos_size._1) :: result
-    }).sorted
-  )
-
   // all choices (available block) with 0 priority
   lazy val init_choices: Choices = Choices[(Possibility, Pos)]()
 
@@ -199,6 +189,25 @@ case class Imp(val map_raw: Array[Array[Int]]){
         (y: Idx, m: MineMap) => m.insert((x, y), map_raw(x)(y))
       )
     )
+
+  // pick the best result
+  lazy val fireball: Pos =
+    if(choices50.isEmpty) choices  .last._2
+    else                  choices50.head._2
+
+  lazy val choices50: Choices = choices.filter(_._1 <= -0.5)
+
+  // all choices (available block) with calculated priority
+  lazy val choices: Choices = map_available.foldRight(init_choices)(
+    (pos_size: (Pos, MineSize), result: Choices) => ({
+      val pos: Pos = pos_size._1
+      val clue_set = nearby(pos, map_dug).foldRight(ClueSet(pos))(
+        (pos_size: (Pos, MineSize), set: ClueSet) =>
+          (set + Clue(pos_size._2 - nearby(pos_size._1, map_mine).size,
+                      nearby(pos_size._1, map_available).keys.toList)))
+      (clue_set.debug.conclude.possibility, pos_size._1) :: result
+    }).sorted
+  )
 
   // take nearby blocks
   def nearby(pos: Pos, map: MineMap): MineMap =
