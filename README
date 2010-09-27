@@ -3,7 +3,7 @@
 # MineSweeper AI for PsMonkey's GWT MineSweeper
 
 # --- setup for people who don't have scala installed.
-> wget http://github.com/godfat/minei/raw/master/war/WEB-INF/lib/minei.jar
+> wget http://github.com/godfat/minei/raw/master/minei.jar
 # the source of the jar is here:
 # http://github.com/godfat/minei/blob/master/Minei.scala
 
