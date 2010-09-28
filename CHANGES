@@ -1,0 +1,43 @@
+= minei changes history
+
+== minei 0.1.1 -- ?
+
+
+
+== minei 0.1.0 -- 2010-09-27
+
+We're calculating the real possibility, that is counting
+hitting combinations divided by all combinations:
+
+  combos_hit.toDouble / combos
+
+Which combos is calculated by:
+
+  overlap_clue    .combos * exclusive_combos(overlap_clue) + combos
+
+Note, this assumes all clues are overlapped together, or not overlapped
+at all. It means it works fine on 2 clues, but for 3 clues, it's very
+likely to calculate wrongly. Consider the case where A overlaps with B,
+and B overlaps with C, but A *doesn't* overlap with C. This would only
+work for cases like A overlaps with B and C, and that's the only place
+which got overlapped.
+
+combos_hit is calculated with the same manner:
+
+  overlap_clue_hit.combos * exclusive_combos(overlap_clue) + combos
+
+This has another problem. This assumes the hit pos is right inside the
+overlapped area, but which could be false if we calculate more blocks.
+This would be more trouble if we increase the search level of nearby
+blocks, since the overlapping problem would be more likely encountered.
+
+
+
+== minei 0.0.1 -- never
+
+The possibility is in the simplest form, and which is a fake:
+
+  amount.toDouble / poses.size
+
+This didn't consider cases where clues got overlapped,
+so the possibility would be greater than 1. (thus fake)
