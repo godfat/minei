@@ -115,19 +115,28 @@ case class Imp(val map_raw: Array[Array[Int]]){
     lazy val combos: Int = combos_hit + combos_miss
 
     lazy val combos_hit: Int =
-      min_hit.to(max).foldRight(0)( (size: MineSize, combos: Int) => {
-        val overlap_clue     = Clue(size, overlap)
-        val overlap_clue_hit = overlap_clue - Clue(1, List(pos))
-
-        overlap_clue_hit.combos * exclusive_combos(overlap_clue) + combos
-      })
+      calculate_combos(min_hit, max, 1)
+      // min_hit.to(max).foldRight(0)( (size: MineSize, combos: Int) => {
+      //   val overlap_clue     = Clue(size, overlap)
+      //   val overlap_clue_hit = overlap_clue - Clue(1, List(pos))
+      //
+      //   overlap_clue_hit.combos * exclusive_combos(overlap_clue) + combos
+      // })
 
     lazy val combos_miss: Int =
-      min.to(max).foldRight(0)( (size: MineSize, combos: Int) => {
-        val overlap_clue     = Clue(size, overlap)
-        val overlap_clue_miss = overlap_clue - Clue(0, List(pos))
+      calculate_combos(min, max, 0)
+      // min.to(max).foldRight(0)( (size: MineSize, combos: Int) => {
+      //   val overlap_clue     = Clue(size, overlap)
+      //   val overlap_clue_miss = overlap_clue - Clue(0, List(pos))
+      //
+      //   overlap_clue_miss.combos * exclusive_combos(overlap_clue) + combos
+      // })
 
-        overlap_clue_miss.combos * exclusive_combos(overlap_clue) + combos
+    def calculate_combos(min: Int, max: Int, hit: Int): Int =
+      min.to(max).foldRight(0)( (size: MineSize, combos: Int) => {
+        val overlap_clue = Clue(size, overlap)
+        val without_pos  = overlap_clue - Clue(hit, List(pos))
+        without_pos.combos * exclusive_combos(overlap_clue) + combos
       })
 
     lazy val min_hit = List(min, 1).max
