@@ -1,5 +1,4 @@
 
-/*
-!/Minei.scala
-!/build.xml
-!/README
+pkg/
+src/
+war/
