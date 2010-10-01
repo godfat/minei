@@ -20,7 +20,7 @@ class Minei extends AI_Interface{
 
 case class Imp(val map_raw: Array[Array[Int]]){
   def debug: Imp = {
-    println(choices.filter(_._1 < 0.0))
+    println(choices.filter(_._1 > 0.0))
     return this
   }
 
@@ -40,7 +40,7 @@ case class Imp(val map_raw: Array[Array[Int]]){
     extends Ordered[Clue]{
     // we want descendant ordering, so use negative numbers
     val possibility: Possibility =
-      if(poses.isEmpty) 0 else - amount.toDouble / poses.size
+      if(poses.isEmpty) 0 else amount.toDouble / poses.size
 
     lazy val combos: Int = {
       val n = poses.size
@@ -94,7 +94,7 @@ case class Imp(val map_raw: Array[Array[Int]]){
       else
         set.find((c: Clue) => c.amount == c.poses.size) match{
           case Some(c) => c
-          case None    => DeducedClue(- possibility)
+          case None    => DeducedClue(possibility)
         }
 
     // remove useless clue
@@ -193,7 +193,7 @@ case class Imp(val map_raw: Array[Array[Int]]){
     if(choices50.isEmpty) choices  .last._2
     else                  choices50.head._2
 
-  lazy val choices50: Choices = choices.filter(_._1 <= -0.5)
+  lazy val choices50: Choices = choices.filter(_._1 >= 0.5)
 
   // all choices (available block) with calculated priority
   lazy val choices: Choices = map_available.foldRight(init_choices)(
@@ -204,7 +204,7 @@ case class Imp(val map_raw: Array[Array[Int]]){
           (set + Clue(pos_size._2 - nearby(pos_size._1, map_mine).size,
                       nearby(pos_size._1, map_available).keys.toList)))
       (clue_set.debug.conclude.possibility, pos_size._1) :: result
-    }).sorted
+    }).sortBy(-_._1)
   )
 
   // take nearby blocks
