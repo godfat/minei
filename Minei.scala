@@ -7,8 +7,6 @@ import org.psmonkey.product.server.mine.MineGM
 
 import scala.collection.immutable.{TreeMap, TreeSet}
 
-// "1,2,3,4\n5,6,7,8".split('\n').map(_.split(',').map(_.toInt))
-
 class Minei extends AI_Interface{
   override def guess(info: GameInfo, xy: Array[Int]){
     Imp.create(info.getMap()).debug.fireball match{

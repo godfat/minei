@@ -30,3 +30,13 @@
 // println(c2.compare(c1)) //  1
 // println(c1.compare(c2)) // -1
 // println(c2.compare(c3)) // -1
+
+import org.godfat.minei.Imp
+
+val map =
+"""
+-1,-1,-1,00
+00,02,01,00
+""".split('\n').map(_.split(',').filter(_ != "").map(_.toInt)).tail
+
+Imp.create(map).debug
