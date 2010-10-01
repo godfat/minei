@@ -1,8 +1,9 @@
 = minei changes history
 
-== minei 0.1.1 -- ?
+== minei 0.1.1 -- 2010-10-01
 
-
+Reorganized build.xml and implementation.
+Try if lazy val would be more efficient?
 
 == minei 0.1.0 -- 2010-09-27
 
