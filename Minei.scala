@@ -107,35 +107,22 @@ case class ClueSet(pos: T.Pos, set: TreeSet[Clue] = TreeSet.empty[Clue]){
   lazy val possibility: T.Possibility =
     if(combos == 0) 0 else combos_hit.toDouble / (combos_hit + combos_miss)
 
-  // lazy val combos: Int =
-  //   min.to(max).foldRight(0)( (size: MineSize, combos: Int) => {
-  //     val overlap_clue = Clue(size, overlap)
-  //     overlap_clue    .combos * exclusive_combos(overlap_clue) + combos
-  //   })
   lazy val combos: Int = combos_hit + combos_miss
 
   lazy val combos_hit: Int =
-    calculate_combos(min_hit, max, 1)
-    // min_hit.to(max).foldRight(0)( (size: MineSize, combos: Int) => {
-    //   val overlap_clue     = Clue(size, overlap)
-    //   val overlap_clue_hit = overlap_clue - Clue(1, List(pos))
-    //
-    //   overlap_clue_hit.combos * exclusive_combos(overlap_clue) + combos
-    // })
+    calculate_combos(min_hit, max, Clue(1, List(pos)))
 
   lazy val combos_miss: Int =
-    calculate_combos(min, max, 0)
-    // min.to(max).foldRight(0)( (size: MineSize, combos: Int) => {
-    //   val overlap_clue     = Clue(size, overlap)
-    //   val overlap_clue_miss = overlap_clue - Clue(0, List(pos))
-    //
-    //   overlap_clue_miss.combos * exclusive_combos(overlap_clue) + combos
-    // })
+    calculate_combos(min, max, Clue(0, List(pos)))
 
-  def calculate_combos(min: Int, max: Int, hit: Int): Int =
+  // same as combos, but with only one foldr
+  lazy val combos_fast: Int =
+    calculate_combos(min, max, Clue(0, List(pos)))
+
+  private def calculate_combos(min: Int, max: Int, clue: Clue): Int =
     min.to(max).foldRight(0)( (size: T.MineSize, combos: Int) => {
       val overlap_clue = Clue(size, overlap)
-      val without_pos  = overlap_clue - Clue(hit, List(pos))
+      val without_pos  = overlap_clue - clue
       without_pos.combos * exclusive_combos(overlap_clue) + combos
     })
 
