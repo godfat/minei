@@ -8,17 +8,26 @@ import org.psmonkey.product.server.mine.MineGM
 import scala.collection.immutable.{TreeMap, TreeSet}
 
 class Minei extends AI_Interface{
-  override def guess(info: GameInfo, xy: Array[Int]){
-    Imp.create(info.getMap()).debug.fireball match{
+  override def guess(info: GameInfo, xy: Array[Int]) = {
+    Imp.create(psmonkey(info.getMap())).debug.fireball match{
       case (x, y) => {
         xy.update(0, x)
         xy.update(1, y)
       }
     }
   }
+
+  private def psmonkey(map: Array[Array[Int]]): Array[Array[Int]] =
+    map.map((ys) => ys.map((v) =>
+      if(v.abs == 9) T.mine
+      else           v ))
 }
 
 object T{
+  lazy val dug      : Int =  1
+  lazy val available: Int = -1
+  lazy val mine     : Int = -2
+
   type Possibility = Double
   type MineSize    = Int
 
@@ -155,15 +164,12 @@ case class Imp(val map: T.MineMap){
     return this
   }
 
-  lazy val available: Int = -1
-  lazy val mine     : Int =  9
-
   // blocks that have already been dug
-  lazy val map_dug      : T.MineMap = map.filter(_._2 >= 1)
+  lazy val map_dug      : T.MineMap = map.filter(_._2 >= T.dug)
   // blocks that we need to examine
-  lazy val map_available: T.MineMap = map.filter(_._2 == available)
+  lazy val map_available: T.MineMap = map.filter(_._2 == T.available)
   // blocks that contain a mine
-  lazy val map_mine     : T.MineMap = map.filter(_._2.abs == mine)
+  lazy val map_mine     : T.MineMap = map.filter(_._2 == T.mine)
 
   // pick the best result
   lazy val fireball: T.Pos =
