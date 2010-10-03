@@ -46,23 +46,26 @@ object T{
 
 trait AbstractClue{ val possibility: T.Possibility }
 
-case class DeducedClue(override val possibility: T.Possibility)
+case class DefiniteClue(override val possibility: T.Possibility)
   extends AbstractClue
 
-case class Clue(val amount: T.MineSize, val poses: List[T.Pos])
+case class Clue(val amount: T.MineSize, val set: TreeSet[T.Pos])
   extends AbstractClue with Ordered[Clue]{
   // we want descendant ordering, so use negative numbers
   override lazy val possibility: T.Possibility =
-    if(poses.isEmpty) 0 else amount.toDouble / poses.size
+    if(set.isEmpty) 0 else amount.toDouble / set.size
 
   lazy val combos: Int = {
-    val n = poses.size
+    val n = set.size
     val k = amount
     factorial(n, n - k + 1) / factorial(k)
   }
 
   def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
-  def -(that: Clue) = Clue(amount - that.amount, poses.diff(that.poses))
+  def -(that: Clue): Clue = if(set.subsetOf(that.set))
+                              Clue(amount - that.amount, set -- that.set)
+                            else
+                              this
 
   // begin horrible! why there's no default lexical comparison?
   def compare(that: Clue) = {
@@ -70,11 +73,11 @@ case class Clue(val amount: T.MineSize, val poses: List[T.Pos])
     if(amount_compare != 0)
       amount_compare
 
-    else if(poses.size != that.poses.size)
-      poses.size.compare(that.poses.size)
+    else if(set.size != that.set.size)
+      set.size.compare(that.set.size)
 
     else
-      poses.zip(that.poses).find( (p: (T.Pos, T.Pos)) => p._1 != p._2 ) match{
+      set.zip(that.set).find( (p: (T.Pos, T.Pos)) => p._1 != p._2 ) match{
         case Some(p) => Ordering[T.Pos].compare(p._1, p._2)
         case None    => 0
       }
@@ -94,16 +97,16 @@ case class ClueSet(pos: T.Pos, set: TreeSet[Clue] = TreeSet.empty[Clue]){
     return this
   }
 
-  lazy val poses: List[List[T.Pos]] = set.map(_.poses).toList
+  lazy val poses: List[TreeSet[T.Pos]] = set.map(_.set).toList
   lazy val conclude: AbstractClue = compact.conclude_compacted
   // conclude after compact
   lazy val conclude_compacted: AbstractClue =
     if(set.isEmpty)
-      DeducedClue(0)
+      DefiniteClue(0)
     else
-      set.find((c: Clue) => c.amount == c.poses.size) match{
+      set.find((c: Clue) => c.amount == c.set.size) match{
         case Some(c) => c
-        case None    => DeducedClue(possibility)
+        case None    => DefiniteClue(possibility)
       }
 
   // remove useless clue
@@ -119,14 +122,21 @@ case class ClueSet(pos: T.Pos, set: TreeSet[Clue] = TreeSet.empty[Clue]){
   lazy val combos: Int = combos_hit + combos_miss
 
   lazy val combos_hit: Int =
-    calculate_combos(min_hit, max, Clue(1, List(pos)))
+    calculate_combos(min_hit, max, Clue(1, TreeSet(pos)))
 
   lazy val combos_miss: Int =
-    calculate_combos(min, max, Clue(0, List(pos)))
+    calculate_combos(min, max, Clue(0, TreeSet(pos)))
 
   // same as combos, but with only one foldr
   lazy val combos_fast: Int =
-    calculate_combos(min, max, Clue(0, List(pos)))
+    calculate_combos(min, max, Clue(0, TreeSet(pos)))
+
+  // lazy val combos_all: Int =
+  //   overlap_list.map((overlap: List[T.Pos]) =>
+  //     overlap.min.to(overlap.max).toList).combinations.foldRight(0)(
+  //       (sizes: List[Int], combos: Int) =>
+  //         overlap + result
+  //     )
 
   private def calculate_combos(min: Int, max: Int, clue: Clue): Int =
     min.to(max).foldRight(0)( (size: T.MineSize, combos: Int) => {
@@ -138,18 +148,21 @@ case class ClueSet(pos: T.Pos, set: TreeSet[Clue] = TreeSet.empty[Clue]){
   lazy val min_hit = List(min, 1).max
 
   lazy val min: T.MineSize =
-    (set.map((clue) => clue.amount - (clue.poses.size - overlap.size)
+    (set.map((clue) => clue.amount - (clue.set.size - overlap.size)
     ) +            0).max
 
   lazy val max: T.MineSize =
     (set.map((clue) => clue.amount
     ) + overlap.size).min
 
-  lazy val overlap: List[T.Pos] =
-    if(poses.isEmpty) List()
+  lazy val overlap: TreeSet[T.Pos] =
+    if(poses.isEmpty) TreeSet[T.Pos]()
     else              poses.tail.foldRight(poses.head)(_.intersect(_))
 
-  lazy val exclusive_overlap: List[T.Pos] = overlap.filter(_ != pos)
+  // lazy val overlap_list: List[List[T.Pos]] =
+
+
+  lazy val exclusive_overlap: TreeSet[T.Pos] = overlap - pos
 
   def exclusive_combos(overlap_clue: Clue): Int =
     set.foldRight(1)( (clue: Clue, combos: Int) =>
@@ -185,7 +198,7 @@ case class Imp(val map: T.MineMap){
       val clue_set = nearby(pos, map_dug).foldRight(ClueSet(pos))(
         (pos_size: (T.Pos, T.MineSize), set: ClueSet) =>
           (set + Clue(pos_size._2 - nearby(pos_size._1, map_mine).size,
-                      nearby(pos_size._1, map_available).keys.toList)))
+                  TreeSet[T.Pos]() ++ nearby(pos_size._1, map_available).keys)))
       (clue_set.debug.conclude.possibility, pos_size._1) :: result
     }).sortBy(-_._1)
   )
