@@ -62,7 +62,7 @@ case class Clue(val amount: T.MineSize, val set: TreeSet[T.Pos])
   }
 
   def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
-  def -(that: Clue): Clue = if(set.subsetOf(that.set))
+  def -(that: Clue): Clue = if(that.set.subsetOf(set))
                               Clue(amount - that.amount, set -- that.set)
                             else
                               this
