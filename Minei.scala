@@ -62,10 +62,10 @@ case class Clue(val amount: T.MineSize, val set: TreeSet[T.Pos])
   }
 
   def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
-  def -(that: Clue): Clue = if(that.set.subsetOf(set))
-                              Clue(amount - that.amount, set -- that.set)
-                            else
-                              this
+  def --(that: Clue): Clue = if(that.set.subsetOf(set))
+                               Clue(amount - that.amount, set -- that.set)
+                             else
+                               this
 
   // begin horrible! why there's no default lexical comparison?
   def compare(that: Clue) = {
@@ -141,7 +141,7 @@ case class ClueSet(pos: T.Pos, set: TreeSet[Clue] = TreeSet.empty[Clue]){
   private def calculate_combos(min: Int, max: Int, clue: Clue): Int =
     min.to(max).foldRight(0)( (size: T.MineSize, combos: Int) => {
       val overlap_clue = Clue(size, overlap)
-      val without_pos  = overlap_clue - clue
+      val without_pos  = overlap_clue -- clue
       without_pos.combos * exclusive_combos(overlap_clue) + combos
     })
 
@@ -166,7 +166,7 @@ case class ClueSet(pos: T.Pos, set: TreeSet[Clue] = TreeSet.empty[Clue]){
 
   def exclusive_combos(overlap_clue: Clue): Int =
     set.foldRight(1)( (clue: Clue, combos: Int) =>
-      (clue - overlap_clue).combos * combos)
+      (clue -- overlap_clue).combos * combos)
 
   def +(clue: Clue): ClueSet = ClueSet(pos, set + clue)
 }
