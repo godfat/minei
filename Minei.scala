@@ -90,6 +90,8 @@ case class Clue(val size: T.MineSize, val set: T.TileSet)
   //   end horrible! why there's no default lexical comparison?
 }
 
+// case class ConjunctedClause
+
 // set is used to filter the same clues
 case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
   def debug: Conclusion = {
@@ -137,10 +139,10 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
     calculate_combos(min, max, Clue(0, T.TileSet()))
 
   // lazy val combos_all: Int =
-  //   overlap_list.map((overlap: List[T.Pos]) =>
-  //     overlap.min.to(overlap.max).toList).combinations.foldRight(0)(
+  //   overlaps.map((o: Overlap) => o.min.to(o.max).toList).
+  //     combinations.foldRight(0)(
   //       (sizes: List[Int], combos: Int) =>
-  //         overlap + result
+  //         overlap + combos
   //     )
 
   private def calculate_combos(min: Int, max: Int, clue: Clue): Int =
@@ -176,6 +178,10 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
   def +(clue: Clue): Conclusion = Conclusion(tile, set + clue)
 }
 
+case class Segment(map: T.MineMap){
+  // lazy val conclusions: List[Conclusion]
+}
+
 case class Imp(val map: T.MineMap){
   def debug: Imp = {
     println(choices.filter(_._1 > 0.0))
@@ -195,6 +201,41 @@ case class Imp(val map: T.MineMap){
     else                  choices50.head._2
 
   lazy val choices50: T.Choices = choices.filter(_._1 >= 0.5)
+
+  lazy val segments: List[Segment] =
+    map_available.foldRight((List[Segment](), T.EmptyTileSet))(
+      (available_size: (T.Tile       , T.MineSize),
+        segments_set : (List[Segment], T.TileSet)) => {
+          val available = available_size._1
+          val size      = available_size._2
+          val segments  =  segments_set ._1
+          val set       =  segments_set ._2
+          if(set.contains(available)) // already in some segment
+            segments_set
+          else{
+            val segment = Segment(expand_available(available, T.EmptyMineMap))
+            (segment :: segments, set ++ segment.map.keys)
+          }
+        }
+    )._1
+
+  def expand_available(available: T.Tile, result: T.MineMap): T.MineMap =
+    nearby(available, map_dug).foldRight(result)(
+      (dug_size: (T.Tile, T.MineSize), result: T.MineMap) =>
+        if(result.contains(dug_size._1))
+          result
+        else
+          expand_dug(dug_size._1, result) ++ result
+    )
+
+  def expand_dug(dug: T.Tile, result: T.MineMap): T.MineMap =
+    nearby(dug, map_available).foldRight(result)(
+      (available_size: (T.Tile, T.MineSize), result: T.MineMap) =>
+        if(result.contains(available_size._1))
+          result
+        else
+          expand_available(available_size._1, result) ++ result
+    )
 
   // all choices (available block) with calculated priority
   lazy val choices: T.Choices = map_available.foldRight(T.EmptyChoices)(
