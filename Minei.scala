@@ -129,7 +129,7 @@ case class ClueSet(pos: T.Pos, set: TreeSet[Clue] = TreeSet.empty[Clue]){
 
   // same as combos, but with only one foldr
   lazy val combos_fast: Int =
-    calculate_combos(min, max, Clue(0, TreeSet(pos)))
+    calculate_combos(min, max, Clue(0, TreeSet()))
 
   // lazy val combos_all: Int =
   //   overlap_list.map((overlap: List[T.Pos]) =>
