@@ -225,7 +225,8 @@ case class Imp(val map: T.MineMap){
         if(result.contains(dug_size._1))
           result
         else
-          expand_dug(dug_size._1, result) ++ result
+          expand_dug(dug_size._1,
+                     result + dug_size) ++ result
     )
 
   def expand_dug(dug: T.Tile, result: T.MineMap): T.MineMap =
@@ -234,7 +235,8 @@ case class Imp(val map: T.MineMap){
         if(result.contains(available_size._1))
           result
         else
-          expand_available(available_size._1, result) ++ result
+          expand_available(available_size._1,
+                           result + available_size) ++ result
     )
 
   // all choices (available block) with calculated priority

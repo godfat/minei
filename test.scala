@@ -39,4 +39,4 @@ val map =
 00,02,01,00
 """.split('\n').map(_.split(',').filter(_ != "").map(_.toInt)).tail
 
-Imp.create(map).debug
+println(Imp.create(map).debug.segments)
