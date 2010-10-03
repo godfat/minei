@@ -43,7 +43,7 @@ object T{
   lazy val TileSet = TreeSet
   lazy val ClueSet = TreeSet
 
-  lazy val EmptyMap     = MineMap[Tile, MineSize]()
+  lazy val EmptyMineMap = MineMap[Tile, MineSize]()
   lazy val EmptyChoices = Choices[(Possibility, Tile)]()
   lazy val EmptyTileSet = TileSet[Tile]()
   lazy val EmptyClueSet = TreeSet[Clue]()
@@ -212,7 +212,7 @@ case class Imp(val map: T.MineMap){
 
   // take nearby blocks
   def nearby(tile: T.Tile, map: T.MineMap): T.MineMap =
-    (-1).to(1).foldRight(T.EmptyMap)(
+    (-1).to(1).foldRight(T.EmptyMineMap)(
       (x: T.Index, result: T.MineMap) => (-1).to(1).foldRight(result)(
         (y: T.Index, result: T.MineMap) => {
           val xx = tile._1 + x
@@ -231,7 +231,7 @@ object Imp{
     val width : Int = map.size
     val height: Int = map.head.size
 
-    Imp(0.until(width).foldRight(T.EmptyMap)(
+    Imp(0.until(width).foldRight(T.EmptyMineMap)(
       (x: T.Index, m: T.MineMap) => 0.until(height).foldRight(m)(
         (y: T.Index, m: T.MineMap) => m.insert((x, y), map(x)(y))
       )
