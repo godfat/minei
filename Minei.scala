@@ -200,13 +200,13 @@ case class Imp(val map: T.MineMap){
   lazy val choices: T.Choices = map_available.foldRight(T.EmptyChoices)(
     (tile_size: (T.Tile, T.MineSize), result: T.Choices) => ({
       val tile: T.Tile = tile_size._1
-      val clue_set = nearby(tile, map_dug).foldRight(Conclusion(tile))(
-        (tile_size: (T.Tile, T.MineSize), conclusion: Conclusion) => {
+      val conclusion = nearby(tile, map_dug).foldRight(Conclusion(tile))(
+        (tile_size: (T.Tile, T.MineSize), con: Conclusion) => {
           val remaining = tile_size._2 - nearby(tile_size._1, map_mine).size
           val set = T.EmptyTileSet ++ nearby(tile_size._1, map_available).keys
-          conclusion + Clue(remaining, set)
+          con + Clue(remaining, set)
         })
-      (clue_set.debug.conclude.possibility, tile_size._1) :: result
+      (conclusion.debug.conclude.possibility, tile_size._1) :: result
     }).sortBy(-_._1)
   )
 
