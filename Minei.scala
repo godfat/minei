@@ -30,18 +30,23 @@ object T{
 
   type Possibility = Double
   type MineSize    = Int
+  type Index       = Int
+  type Tile        = (Index, Index)
 
-  type Choices = List[(Possibility, Pos)]
-  type MineMap = TreeMap[Pos, MineSize]
+  type Choices = List[(Possibility, Tile)]
+  type MineMap = TreeMap[Tile, MineSize]
+  type TileSet = TreeSet[Tile]
+  type ClueSet = TreeSet[Clue]
 
-  lazy val  Choices = List
-  lazy val  MineMap = TreeMap
+  lazy val Choices = List
+  lazy val MineMap = TreeMap
+  lazy val TileSet = TreeSet
+  lazy val ClueSet = TreeSet
 
-  type Idx = Int
-  type Pos = (Idx, Idx)
-
-  lazy val EmptyMap     = MineMap[Pos, MineSize]()
-  lazy val EmptyChoices = Choices[(Possibility, Pos)]()
+  lazy val EmptyMap     = MineMap[Tile, MineSize]()
+  lazy val EmptyChoices = Choices[(Possibility, Tile)]()
+  lazy val EmptyTileSet = TileSet[Tile]()
+  lazy val EmptyClueSet = TreeSet[Clue]()
 }
 
 trait AbstractClue{ val possibility: T.Possibility }
@@ -49,36 +54,36 @@ trait AbstractClue{ val possibility: T.Possibility }
 case class DefiniteClue(override val possibility: T.Possibility)
   extends AbstractClue
 
-case class Clue(val amount: T.MineSize, val set: TreeSet[T.Pos])
+case class Clue(val size: T.MineSize, val set: T.TileSet)
   extends AbstractClue with Ordered[Clue]{
   // we want descendant ordering, so use negative numbers
   override lazy val possibility: T.Possibility =
-    if(set.isEmpty) 0 else amount.toDouble / set.size
+    if(set.isEmpty) 0 else size.toDouble / set.size
 
   lazy val combos: Int = {
     val n = set.size
-    val k = amount
+    val k = size
     factorial(n, n - k + 1) / factorial(k)
   }
 
   def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
   def --(that: Clue): Clue = if(that.set.subsetOf(set))
-                               Clue(amount - that.amount, set -- that.set)
+                               Clue(size - that.size, set -- that.set)
                              else
                                this
 
   // begin horrible! why there's no default lexical comparison?
   def compare(that: Clue) = {
-    val amount_compare: Int = amount.compare(that.amount)
-    if(amount_compare != 0)
-      amount_compare
+    val size_compare: Int = size.compare(that.size)
+    if(size_compare != 0)
+      size_compare
 
     else if(set.size != that.set.size)
       set.size.compare(that.set.size)
 
     else
-      set.zip(that.set).find( (p: (T.Pos, T.Pos)) => p._1 != p._2 ) match{
-        case Some(p) => Ordering[T.Pos].compare(p._1, p._2)
+      set.zip(that.set).find( (p: (T.Tile, T.Tile)) => p._1 != p._2 ) match{
+        case Some(p) => Ordering[T.Tile].compare(p._1, p._2)
         case None    => 0
       }
   }
@@ -86,9 +91,9 @@ case class Clue(val amount: T.MineSize, val set: TreeSet[T.Pos])
 }
 
 // set is used to filter the same clues
-case class ClueSet(pos: T.Pos, set: TreeSet[Clue] = TreeSet.empty[Clue]){
-  def debug: ClueSet = {
-    print(pos)
+case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
+  def debug: Conclusion = {
+    print(tile)
     print(": possibility: ")
     print(combos_hit)
     print(" / ")
@@ -97,20 +102,20 @@ case class ClueSet(pos: T.Pos, set: TreeSet[Clue] = TreeSet.empty[Clue]){
     return this
   }
 
-  lazy val poses: List[TreeSet[T.Pos]] = set.map(_.set).toList
+  lazy val tiles: List[T.TileSet] = set.map(_.set).toList
   lazy val conclude: AbstractClue = compact.conclude_compacted
   // conclude after compact
   lazy val conclude_compacted: AbstractClue =
     if(set.isEmpty)
       DefiniteClue(0)
     else
-      set.find((c: Clue) => c.amount == c.set.size) match{
+      set.find((c: Clue) => c.size == c.set.size) match{
         case Some(c) => c
         case None    => DefiniteClue(possibility)
       }
 
   // remove useless clue
-  lazy val compact: ClueSet = ClueSet(pos, set.filter(_.amount > 0))
+  lazy val compact: Conclusion = Conclusion(tile, set.filter(_.size > 0))
 
   // TODO: we haven't considered complex overlap,
   //       say A overlaps with B,
@@ -122,14 +127,14 @@ case class ClueSet(pos: T.Pos, set: TreeSet[Clue] = TreeSet.empty[Clue]){
   lazy val combos: Int = combos_hit + combos_miss
 
   lazy val combos_hit: Int =
-    calculate_combos(min_hit, max, Clue(1, TreeSet(pos)))
+    calculate_combos(min_hit, max, Clue(1, T.TileSet(tile)))
 
   lazy val combos_miss: Int =
-    calculate_combos(min, max, Clue(0, TreeSet(pos)))
+    calculate_combos(min, max, Clue(0, T.TileSet(tile)))
 
   // same as combos, but with only one foldr
   lazy val combos_fast: Int =
-    calculate_combos(min, max, Clue(0, TreeSet()))
+    calculate_combos(min, max, Clue(0, T.TileSet()))
 
   // lazy val combos_all: Int =
   //   overlap_list.map((overlap: List[T.Pos]) =>
@@ -148,27 +153,27 @@ case class ClueSet(pos: T.Pos, set: TreeSet[Clue] = TreeSet.empty[Clue]){
   lazy val min_hit = List(min, 1).max
 
   lazy val min: T.MineSize =
-    (set.map((clue) => clue.amount - (clue.set.size - overlap.size)
+    (set.map((clue) => clue.size - (clue.set.size - overlap.size)
     ) +            0).max
 
   lazy val max: T.MineSize =
-    (set.map((clue) => clue.amount
+    (set.map((clue) => clue.size
     ) + overlap.size).min
 
-  lazy val overlap: TreeSet[T.Pos] =
-    if(poses.isEmpty) TreeSet[T.Pos]()
-    else              poses.tail.foldRight(poses.head)(_.intersect(_))
+  lazy val overlap: T.TileSet =
+    if(tiles.isEmpty) T.TileSet()
+    else              tiles.tail.foldRight(tiles.head)(_.intersect(_))
 
   // lazy val overlap_list: List[List[T.Pos]] =
 
 
-  lazy val exclusive_overlap: TreeSet[T.Pos] = overlap - pos
+  lazy val exclusive_overlap: T.TileSet = overlap - tile
 
   def exclusive_combos(overlap_clue: Clue): Int =
     set.foldRight(1)( (clue: Clue, combos: Int) =>
       (clue -- overlap_clue).combos * combos)
 
-  def +(clue: Clue): ClueSet = ClueSet(pos, set + clue)
+  def +(clue: Clue): Conclusion = Conclusion(tile, set + clue)
 }
 
 case class Imp(val map: T.MineMap){
@@ -185,7 +190,7 @@ case class Imp(val map: T.MineMap){
   lazy val map_mine     : T.MineMap = map.filter(_._2 == T.mine)
 
   // pick the best result
-  lazy val fireball: T.Pos =
+  lazy val fireball: T.Tile =
     if(choices50.isEmpty) choices  .last._2
     else                  choices50.head._2
 
@@ -193,23 +198,25 @@ case class Imp(val map: T.MineMap){
 
   // all choices (available block) with calculated priority
   lazy val choices: T.Choices = map_available.foldRight(T.EmptyChoices)(
-    (pos_size: (T.Pos, T.MineSize), result: T.Choices) => ({
-      val pos: T.Pos = pos_size._1
-      val clue_set = nearby(pos, map_dug).foldRight(ClueSet(pos))(
-        (pos_size: (T.Pos, T.MineSize), set: ClueSet) =>
-          (set + Clue(pos_size._2 - nearby(pos_size._1, map_mine).size,
-                  TreeSet[T.Pos]() ++ nearby(pos_size._1, map_available).keys)))
-      (clue_set.debug.conclude.possibility, pos_size._1) :: result
+    (tile_size: (T.Tile, T.MineSize), result: T.Choices) => ({
+      val tile: T.Tile = tile_size._1
+      val clue_set = nearby(tile, map_dug).foldRight(Conclusion(tile))(
+        (tile_size: (T.Tile, T.MineSize), conclusion: Conclusion) => {
+          val remaining = tile_size._2 - nearby(tile_size._1, map_mine).size
+          val set = T.EmptyTileSet ++ nearby(tile_size._1, map_available).keys
+          conclusion + Clue(remaining, set)
+        })
+      (clue_set.debug.conclude.possibility, tile_size._1) :: result
     }).sortBy(-_._1)
   )
 
   // take nearby blocks
-  def nearby(pos: T.Pos, map: T.MineMap): T.MineMap =
+  def nearby(tile: T.Tile, map: T.MineMap): T.MineMap =
     (-1).to(1).foldRight(T.EmptyMap)(
-      (x: T.Idx, result: T.MineMap) => (-1).to(1).foldRight(result)(
-        (y: T.Idx, result: T.MineMap) => {
-          val xx = pos._1 + x
-          val yy = pos._2 + y
+      (x: T.Index, result: T.MineMap) => (-1).to(1).foldRight(result)(
+        (y: T.Index, result: T.MineMap) => {
+          val xx = tile._1 + x
+          val yy = tile._2 + y
           map.get((xx, yy)) match{
             case Some(size) => result.updated((xx, yy), size) // TODO: insert?
             case _          => result
@@ -225,8 +232,8 @@ object Imp{
     val height: Int = map.head.size
 
     Imp(0.until(width).foldRight(T.EmptyMap)(
-      (x: T.Idx, m: T.MineMap) => 0.until(height).foldRight(m)(
-        (y: T.Idx, m: T.MineMap) => m.insert((x, y), map(x)(y))
+      (x: T.Index, m: T.MineMap) => 0.until(height).foldRight(m)(
+        (y: T.Index, m: T.MineMap) => m.insert((x, y), map(x)(y))
       )
     ))
   }
