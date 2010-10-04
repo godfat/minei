@@ -42,7 +42,7 @@ val map =
 println(Imp.create(map).debug.segments)
 
 def combos[A](list: List[List[A]]): List[List[A]] = list match{
-  case Nil         => List[List[A]](List[A]())
+  case Nil         => List(Nil)
   case (xs :: xss) =>  for(x <- xs; rs <- combos(xss)) yield x :: rs
 }
 
