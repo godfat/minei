@@ -40,3 +40,16 @@ val map =
 """.split('\n').map(_.split(',').filter(_ != "").map(_.toInt)).tail
 
 println(Imp.create(map).debug.segments)
+
+def combos[A](list: List[List[A]]): List[List[A]] = list match{
+  case Nil         => List[List[A]](List[A]())
+  case (xs :: xss) =>  for(x <- xs; rs <- combos(xss)) yield x :: rs
+}
+
+def combo2[A](list: List[A]): List[(A, A)] = list match{
+  case Nil       => Nil
+  case (x :: xs) => (for(y <- xs) yield (x, y)) ++ combo2(xs)
+}
+
+println(combos(List(List(1,2), List(3,4), List(5,6))))
+println(combo2(List(1,2,3,4,5,6,7,8)))
