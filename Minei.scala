@@ -28,12 +28,12 @@ object T{
   lazy val available: Int = -1
   lazy val mine     : Int = -2
 
-  type Possibility = Double
+  type Probability = Double
   type MineSize    = Int
   type Index       = Int
   type Tile        = (Index, Index)
 
-  type Choices = List[(Possibility, Tile)]
+  type Choices = List[(Probability, Tile)]
   type MineMap = TreeMap[Tile, MineSize]
   type TileSet = TreeSet[Tile]
   type ClueSet = TreeSet[Clue]
@@ -44,20 +44,20 @@ object T{
   lazy val ClueSet = TreeSet
 
   lazy val EmptyMineMap = MineMap[Tile, MineSize]()
-  lazy val EmptyChoices = Choices[(Possibility, Tile)]()
+  lazy val EmptyChoices = Choices[(Probability, Tile)]()
   lazy val EmptyTileSet = TileSet[Tile]()
   lazy val EmptyClueSet = TreeSet[Clue]()
 }
 
-trait AbstractClue{ val possibility: T.Possibility }
+trait AbstractClue{ val probability: T.Probability }
 
-case class DefiniteClue(override val possibility: T.Possibility)
+case class DefiniteClue(override val probability: T.Probability)
   extends AbstractClue
 
 case class Clue(val size: T.MineSize, val set: T.TileSet)
   extends AbstractClue with Ordered[Clue]{
   // we want descendant ordering, so use negative numbers
-  override lazy val possibility: T.Possibility =
+  override lazy val probability: T.Probability =
     if(set.isEmpty) 0 else size.toDouble / set.size
 
   lazy val combos: Int = {
@@ -96,7 +96,7 @@ case class Clue(val size: T.MineSize, val set: T.TileSet)
 case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
   def debug: Conclusion = {
     print(tile)
-    print(": possibility: ")
+    print(": probability: ")
     print(combos_hit)
     print(" / ")
     println(combos)
@@ -113,7 +113,7 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
     else
       set.find((c: Clue) => c.size == c.set.size) match{
         case Some(c) => c
-        case None    => DefiniteClue(possibility)
+        case None    => DefiniteClue(probability)
       }
 
   // remove useless clue
@@ -123,7 +123,7 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
   //       say A overlaps with B,
   //           B overlaps with C, and
   //           A didn't overlap with C
-  lazy val possibility: T.Possibility =
+  lazy val probability: T.Probability =
     if(combos == 0) 0 else combos_hit.toDouble / (combos_hit + combos_miss)
 
   lazy val combos: Int = combos_hit + combos_miss
@@ -249,7 +249,7 @@ case class Imp(val map: T.MineMap){
           val set = T.EmptyTileSet ++ nearby(tile_size._1, map_available).keys
           con + Clue(remaining, set)
         })
-      (conclusion.debug.conclude.possibility, tile_size._1) :: result
+      (conclusion.debug.conclude.probability, tile_size._1) :: result
     }).sortBy(-_._1)
   )
 
