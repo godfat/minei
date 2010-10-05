@@ -60,7 +60,7 @@ case class Clue(val size: T.MineSize, val set: T.TileSet)
   override lazy val probability: T.Probability =
     if(set.isEmpty) 0 else size.toDouble / set.size
 
-  lazy val combos: Int = {
+  lazy val count: Int = {
     val n = set.size
     val k = size
     factorial(n, n - k + 1) / factorial(k)
@@ -97,9 +97,9 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
   def debug: Conclusion = {
     print(tile)
     print(": probability: ")
-    print(combos_hit)
+    print(count_hit)
     print(" / ")
-    println(combos)
+    println(count)
     println(set)
     return this
   }
@@ -124,19 +124,19 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
   //           B overlaps with C, and
   //           A didn't overlap with C
   lazy val probability: T.Probability =
-    if(combos == 0) 0 else combos_hit.toDouble / (combos_hit + combos_miss)
+    if(count == 0) 0 else count_hit.toDouble / (count_hit + count_miss)
 
-  lazy val combos: Int = combos_hit + combos_miss
+  lazy val count: Int = count_hit + count_miss
 
-  lazy val combos_hit: Int =
-    calculate_combos(min_hit, max, Clue(1, T.TileSet(tile)))
+  lazy val count_hit: Int =
+    calculate_count(min_hit, max, Clue(1, T.TileSet(tile)))
 
-  lazy val combos_miss: Int =
-    calculate_combos(min, max, Clue(0, T.TileSet(tile)))
+  lazy val count_miss: Int =
+    calculate_count(min, max, Clue(0, T.TileSet(tile)))
 
-  // same as combos, but with only one foldr
-  lazy val combos_fast: Int =
-    calculate_combos(min, max, Clue(0, T.TileSet()))
+  // same as count, but with only one foldr
+  lazy val count_fast: Int =
+    calculate_count(min, max, Clue(0, T.TileSet()))
 
   // lazy val combos_all: Int =
   //   overlaps.map((o: Overlap) => o.min.to(o.max).toList).
@@ -145,11 +145,11 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
   //         overlap + combos
   //     )
 
-  private def calculate_combos(min: Int, max: Int, clue: Clue): Int =
-    min.to(max).foldRight(0)( (size: T.MineSize, combos: Int) => {
+  private def calculate_count(min: Int, max: Int, clue: Clue): Int =
+    min.to(max).foldRight(0)( (size: T.MineSize, count: Int) => {
       val overlap_clue = Clue(size, overlap)
       val without_pos  = overlap_clue -- clue
-      without_pos.combos * exclusive_combos(overlap_clue) + combos
+      without_pos.count * exclusive_count(overlap_clue) + count
     })
 
   lazy val min_hit = List(min, 1).max
@@ -171,9 +171,9 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
 
   lazy val exclusive_overlap: T.TileSet = overlap - tile
 
-  def exclusive_combos(overlap_clue: Clue): Int =
-    set.foldRight(1)( (clue: Clue, combos: Int) =>
-      (clue -- overlap_clue).combos * combos)
+  def exclusive_count(overlap_clue: Clue): Int =
+    set.foldRight(1)( (clue: Clue, count: Int) =>
+      (clue -- overlap_clue).count * count)
 
   def +(clue: Clue): Conclusion = Conclusion(tile, set + clue)
 }
