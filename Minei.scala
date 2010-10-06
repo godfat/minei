@@ -9,7 +9,7 @@ import scala.collection.immutable.{TreeMap, TreeSet}
 
 class Minei extends AI_Interface{
   override def guess(info: GameInfo, xy: Array[Int]) = {
-    Imp.create(psmonkey(info.getMap())).debug.fireball match{
+    Imp.create(psmonkey(info.getMap())).debug.aim match{
       case (x, y) => {
         xy.update(0, x)
         xy.update(1, y)
@@ -216,7 +216,7 @@ case class Imp(val map: T.MineMap) extends MapUtil{
 
 
   // pick the best result
-  lazy val fireball: T.Tile =
+  lazy val aim: T.Tile =
     if(choices50.isEmpty) choices  .last._2
     else                  choices50.head._2
 
