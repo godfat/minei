@@ -178,11 +178,28 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
   def +(clue: Clue): Conclusion = Conclusion(tile, set + clue)
 }
 
-case class Segment(map: T.MineMap){
+trait MapUtil{
+  // take nearby blocks
+  def nearby(tile: T.Tile, map: T.MineMap): T.MineMap =
+    (-1).to(1).foldRight(T.EmptyMineMap)(
+      (x: T.Index, result: T.MineMap) => (-1).to(1).foldRight(result)(
+        (y: T.Index, result: T.MineMap) => {
+          val xx = tile._1 + x
+          val yy = tile._2 + y
+          map.get((xx, yy)) match{
+            case Some(size) => result.updated((xx, yy), size) // TODO: insert?
+            case _          => result
+          }
+        }
+      )
+    )
+}
+
+case class Segment(map: T.MineMap) extends MapUtil{
   // lazy val conclusions: List[Conclusion]
 }
 
-case class Imp(val map: T.MineMap){
+case class Imp(val map: T.MineMap) extends MapUtil{
   def debug: Imp = {
     println(choices.filter(_._1 > 0.0))
     return this
@@ -252,21 +269,6 @@ case class Imp(val map: T.MineMap){
       (conclusion.debug.conclude.probability, tile_size._1) :: result
     }).sortBy(-_._1)
   )
-
-  // take nearby blocks
-  def nearby(tile: T.Tile, map: T.MineMap): T.MineMap =
-    (-1).to(1).foldRight(T.EmptyMineMap)(
-      (x: T.Index, result: T.MineMap) => (-1).to(1).foldRight(result)(
-        (y: T.Index, result: T.MineMap) => {
-          val xx = tile._1 + x
-          val yy = tile._2 + y
-          map.get((xx, yy)) match{
-            case Some(size) => result.updated((xx, yy), size) // TODO: insert?
-            case _          => result
-          }
-        }
-      )
-    )
 }
 
 object Imp{
