@@ -200,9 +200,9 @@ case class Segment(val map: T.MineMap) extends MapUtil{
     (tile_size, result) => {
       val tile = tile_size._1
       val size = tile_size._2
-      val remaining = size - nearby(tile, map_mine).size
-      val set = T.EmptyTileSet ++ nearby(tile, map_available).keys
-      result + Clue(remaining, set)})
+      val mines = size - nearby(tile, map_mine).size
+      val tiles = T.EmptyTileSet ++ nearby(tile, map_available).keys
+      result + Clue(mines, tiles)})
 
   lazy val conclusions =
     map_available.keys.map((tile) => Conclusion(tile, clues))
@@ -228,16 +228,16 @@ case class Imp(val map: T.MineMap) extends MapUtil{
 
   lazy val segments: List[Segment] =
     map_available.foldRight((List[Segment](), T.EmptyTileSet))(
-      (available_size, segments_set) => {
+      (available_size, segments_tiles) => {
         val available = available_size._1
         val size      = available_size._2
-        val segments  =  segments_set ._1
-        val set       =  segments_set ._2
-        if(set.contains(available)) // already in some segment
-          segments_set
+        val segments  = segments_tiles._1
+        val tiles     = segments_tiles._2
+        if(tiles.contains(available)) // already in some segment
+          segments_tiles
         else{
           val segment = Segment(expand_available(available, T.EmptyMineMap))
-          (segment :: segments, set ++ segment.map.keys)
+          (segment :: segments, tiles ++ segment.map.keys)
     }})._1
 
   def expand_available(available: T.Tile, result: T.MineMap): T.MineMap =
