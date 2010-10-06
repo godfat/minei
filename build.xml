@@ -30,7 +30,7 @@
   </taskdef>
 
   <target name="scalac" depends="javac" description="Compile scala source">
-    <mkdir dir="war/WEB-INF/classes/godfat/org/minei"/>
+    <mkdir dir="war/WEB-INF/classes/org/godfat/minei"/>
     <copy todir="src/org/godfat/minei" file="Minei.scala"/>
     <scalac srcdir="src" destdir="war/WEB-INF/classes"
             classpathref="project.class.path"
