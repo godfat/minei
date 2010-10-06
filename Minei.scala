@@ -87,7 +87,7 @@ case class Clue(val size: T.MineSize, val set: T.TileSet)
 
 
 
-// case class ConjunctedClause
+// case class ConjunctedClues
 
 // set is used to filter the same clues
 case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
@@ -198,7 +198,7 @@ trait MapUtil{
 
 case class Segment(val map: T.MineMap) extends MapUtil{
 
-  lazy val clauses: T.ClueSet = map_dug.foldRight(T.EmptyClueSet)(
+  lazy val clues: T.ClueSet = map_dug.foldRight(T.EmptyClueSet)(
     (tile_size: (T.Tile, T.MineSize), result: T.ClueSet) => {
       val tile = tile_size._1
       val size = tile_size._2
@@ -207,10 +207,10 @@ case class Segment(val map: T.MineMap) extends MapUtil{
       result + Clue(remaining, set)})
 
   lazy val conclusions =
-    map_available.keys.map((tile: T.Tile) => Conclusion(tile, clauses))
+    map_available.keys.map((tile: T.Tile) => Conclusion(tile, clues))
 
-  // lazy val conjuncted_clauses =
-  // lazy val exclusive_clauses =
+  // lazy val conjuncted_clues =
+  // lazy val exclusive_clues =
 }
 
 
