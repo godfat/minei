@@ -80,9 +80,9 @@ case class Clue(val size: T.MineSize, val set: T.TileSet)
       set.size.compare(that.set.size)
 
     else
-      set.zip(that.set).find( (p: (T.Tile, T.Tile)) => p._1 != p._2 ) match{
-        case Some(p) => Ordering[T.Tile].compare(p._1, p._2)
-        case None    => 0}}}
+      set.zip(that.set).find((tiles) => tiles._1 != tiles._2 ) match{
+        case Some(tiles) => Ordering[T.Tile].compare(tiles._1, tiles._2)
+        case None        => 0}}}
   //   end horrible! why there's no default lexical comparison?
 
 
@@ -107,9 +107,9 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
     if(set.isEmpty)
       DefiniteClue(0)
     else
-      set.find((c: Clue) => c.size == c.set.size) match{
-        case Some(c) => c
-        case None    => DefiniteClue(probability)}
+      set.find((clue) => clue.size == clue.set.size) match{
+        case Some(clue) => clue
+        case None       => DefiniteClue(probability)}
 
   // remove useless clue
   lazy val compact: Conclusion = Conclusion(tile, set.filter(_.size > 0))
@@ -141,7 +141,7 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
   //     )
 
   private def calculate_count(min: Int, max: Int, clue: Clue): Int =
-    min.to(max).foldRight(0)( (size: T.MineSize, count: Int) => {
+    min.to(max).foldRight(0)((size, count) => {
       val overlap_clue = Clue(size, overlap)
       val without_pos  = overlap_clue -- clue
       without_pos.count * exclusive_count(overlap_clue) + count})
@@ -166,8 +166,7 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
   lazy val exclusive_overlap: T.TileSet = overlap - tile
 
   def exclusive_count(overlap_clue: Clue): Int =
-    set.foldRight(1)( (clue: Clue, count: Int) =>
-      (clue -- overlap_clue).count * count)
+    set.foldRight(1)((clue, count) => (clue -- overlap_clue).count * count)
 
   def +(clue: Clue): Conclusion = Conclusion(tile, set + clue)}
 
@@ -185,21 +184,20 @@ trait MapUtil{
 
   // take nearby blocks
   def nearby(tile: T.Tile, map: T.MineMap): T.MineMap =
-    (-1).to(1).foldRight(T.EmptyMineMap)(
-      (x: T.Index, result: T.MineMap) => (-1).to(1).foldRight(result)(
-        (y: T.Index, result: T.MineMap) => {
-          val xx = tile._1 + x
-          val yy = tile._2 + y
-          map.get((xx, yy)) match{
-            case Some(size) => result.updated((xx, yy), size) // TODO: insert?
-            case _          => result}}))}
+    (-1).to(1).foldRight(T.EmptyMineMap)((x, result) =>
+      (-1).to(1).foldRight(result)((y, result) => {
+        val xx = tile._1 + x
+        val yy = tile._2 + y
+        map.get((xx, yy)) match{
+          case Some(size) => result.updated((xx, yy), size) // TODO: insert?
+          case _          => result}}))}
 
 
 
 case class Segment(val map: T.MineMap) extends MapUtil{
 
   lazy val clues: T.ClueSet = map_dug.foldRight(T.EmptyClueSet)(
-    (tile_size: (T.Tile, T.MineSize), result: T.ClueSet) => {
+    (tile_size, result) => {
       val tile = tile_size._1
       val size = tile_size._2
       val remaining = size - nearby(tile, map_mine).size
@@ -207,7 +205,7 @@ case class Segment(val map: T.MineMap) extends MapUtil{
       result + Clue(remaining, set)})
 
   lazy val conclusions =
-    map_available.keys.map((tile: T.Tile) => Conclusion(tile, clues))
+    map_available.keys.map((tile) => Conclusion(tile, clues))
 
   // lazy val conjuncted_clues =
   // lazy val exclusive_clues =
@@ -230,22 +228,21 @@ case class Imp(val map: T.MineMap) extends MapUtil{
 
   lazy val segments: List[Segment] =
     map_available.foldRight((List[Segment](), T.EmptyTileSet))(
-      (available_size: (T.Tile       , T.MineSize),
-        segments_set : (List[Segment], T.TileSet)) => {
-          val available = available_size._1
-          val size      = available_size._2
-          val segments  =  segments_set ._1
-          val set       =  segments_set ._2
-          if(set.contains(available)) // already in some segment
-            segments_set
-          else{
-            val segment = Segment(expand_available(available, T.EmptyMineMap))
-            (segment :: segments, set ++ segment.map.keys)
+      (available_size, segments_set) => {
+        val available = available_size._1
+        val size      = available_size._2
+        val segments  =  segments_set ._1
+        val set       =  segments_set ._2
+        if(set.contains(available)) // already in some segment
+          segments_set
+        else{
+          val segment = Segment(expand_available(available, T.EmptyMineMap))
+          (segment :: segments, set ++ segment.map.keys)
     }})._1
 
   def expand_available(available: T.Tile, result: T.MineMap): T.MineMap =
     nearby(available, map_dug).foldRight(result)(
-      (dug_size: (T.Tile, T.MineSize), result: T.MineMap) =>
+      (dug_size, result) =>
         if(result.contains(dug_size._1))
           result
         else
@@ -254,7 +251,7 @@ case class Imp(val map: T.MineMap) extends MapUtil{
 
   def expand_dug(dug: T.Tile, result: T.MineMap): T.MineMap =
     nearby(dug, map_available).foldRight(result)(
-      (available_size: (T.Tile, T.MineSize), result: T.MineMap) =>
+      (available_size, result) =>
         if(result.contains(available_size._1))
           result
         else
@@ -263,10 +260,10 @@ case class Imp(val map: T.MineMap) extends MapUtil{
 
   // all choices (available block) with calculated priority
   lazy val choices: T.Choices = map_available.foldRight(T.EmptyChoices)(
-    (tile_size: (T.Tile, T.MineSize), result: T.Choices) => ({
-      val tile: T.Tile = tile_size._1
+    (tile_size, result) => ({
+      val tile = tile_size._1
       val conclusion = nearby(tile, map_dug).foldRight(Conclusion(tile))(
-        (tile_size: (T.Tile, T.MineSize), con: Conclusion) => {
+        (tile_size, con) => {
           val remaining = tile_size._2 - nearby(tile_size._1, map_mine).size
           val set = T.EmptyTileSet ++ nearby(tile_size._1, map_available).keys
           con + Clue(remaining, set)})
@@ -283,5 +280,5 @@ object Imp{
     val height: Int = map.head.size
 
     Imp(0.until(width).foldRight(T.EmptyMineMap)(
-      (x: T.Index, m: T.MineMap) => 0.until(height).foldRight(m)(
-        (y: T.Index, m: T.MineMap) => m.insert((x, y), map(x)(y)))))}}
+      (x: T.Index, result) => 0.until(height).foldRight(result)(
+        (y: T.Index, result) => result.insert((x, y), map(x)(y)))))}}
