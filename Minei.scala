@@ -90,29 +90,29 @@ case class Clue(val size: T.MineSize, val tiles: T.TileSet)
 // case class ConjunctedClues
 
 // set is used to filter the same clues
-case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
+case class Conclusion(tile: T.Tile, clues: T.ClueSet = T.EmptyClueSet){
   def debug: Conclusion = {
     print(tile)
     print(": probability: ")
     print(count_hit)
     print(" / ")
     println(count)
-    println(set)
+    println(clues)
     return this}
 
-  lazy val tiles: List[T.TileSet] = set.map(_.tiles).toList
+  lazy val tiles: List[T.TileSet] = clues.map(_.tiles).toList
   lazy val conclude: AbstractClue = compact.conclude_compacted
   // conclude after compact
   lazy val conclude_compacted: AbstractClue =
-    if(set.isEmpty)
+    if(clues.isEmpty)
       DefiniteClue(0)
     else
-      set.find((clue) => clue.size == clue.tiles.size) match{
+      clues.find((clue) => clue.size == clue.tiles.size) match{
         case Some(clue) => clue
         case None       => DefiniteClue(probability)}
 
   // remove useless clue
-  lazy val compact: Conclusion = Conclusion(tile, set.filter(_.size > 0))
+  lazy val compact: Conclusion = Conclusion(tile, clues.filter(_.size > 0))
 
   // TODO: we haven't considered complex overlap,
   //       say A overlaps with B,
@@ -149,11 +149,11 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
   lazy val min_hit = List(min, 1).max
 
   lazy val min: T.MineSize =
-    (set.map((clue) => clue.size - (clue.tiles.size - overlap.size)
+    (clues.map((clue) => clue.size - (clue.tiles.size - overlap.size)
     ) +            0).max
 
   lazy val max: T.MineSize =
-    (set.map((clue) => clue.size
+    (clues.map((clue) => clue.size
     ) + overlap.size).min
 
   lazy val overlap: T.TileSet =
@@ -166,9 +166,9 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
   lazy val exclusive_overlap: T.TileSet = overlap - tile
 
   def exclusive_count(overlap_clue: Clue): Int =
-    set.foldRight(1)((clue, count) => (clue -- overlap_clue).count * count)
+    clues.foldRight(1)((clue, count) => (clue -- overlap_clue).count * count)
 
-  def +(clue: Clue): Conclusion = Conclusion(tile, set + clue)}
+  def +(clue: Clue): Conclusion = Conclusion(tile, clues + clue)}
 
 
 
