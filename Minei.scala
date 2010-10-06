@@ -12,16 +12,14 @@ class Minei extends AI_Interface{
     Imp.create(psmonkey(info.getMap())).debug.aim match{
       case (x, y) => {
         xy.update(0, x)
-        xy.update(1, y)
-      }
-    }
-  }
+        xy.update(1, y)}}}
 
   private def psmonkey(map: Array[Array[Int]]): Array[Array[Int]] =
     map.map((ys) => ys.map((v) =>
       if(v.abs == 9) T.mine
-      else           v ))
-}
+      else           v ))}
+
+
 
 object T{
   lazy val dug      : Int =  1
@@ -46,8 +44,9 @@ object T{
   lazy val EmptyMineMap = MineMap[Tile, MineSize]()
   lazy val EmptyChoices = Choices[(Probability, Tile)]()
   lazy val EmptyTileSet = TileSet[Tile]()
-  lazy val EmptyClueSet = TreeSet[Clue]()
-}
+  lazy val EmptyClueSet = TreeSet[Clue]()}
+
+
 
 trait AbstractClue{ val probability: T.Probability }
 
@@ -63,8 +62,7 @@ case class Clue(val size: T.MineSize, val set: T.TileSet)
   lazy val count: Int = {
     val n = set.size
     val k = size
-    factorial(n, n - k + 1) / factorial(k)
-  }
+    factorial(n, n - k + 1) / factorial(k)}
 
   def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
   def --(that: Clue): Clue = if(that.set.subsetOf(set))
@@ -84,11 +82,10 @@ case class Clue(val size: T.MineSize, val set: T.TileSet)
     else
       set.zip(that.set).find( (p: (T.Tile, T.Tile)) => p._1 != p._2 ) match{
         case Some(p) => Ordering[T.Tile].compare(p._1, p._2)
-        case None    => 0
-      }
-  }
+        case None    => 0}}}
   //   end horrible! why there's no default lexical comparison?
-}
+
+
 
 // case class ConjunctedClause
 
@@ -101,8 +98,7 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
     print(" / ")
     println(count)
     println(set)
-    return this
-  }
+    return this}
 
   lazy val tiles: List[T.TileSet] = set.map(_.set).toList
   lazy val conclude: AbstractClue = compact.conclude_compacted
@@ -113,8 +109,7 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
     else
       set.find((c: Clue) => c.size == c.set.size) match{
         case Some(c) => c
-        case None    => DefiniteClue(probability)
-      }
+        case None    => DefiniteClue(probability)}
 
   // remove useless clue
   lazy val compact: Conclusion = Conclusion(tile, set.filter(_.size > 0))
@@ -149,8 +144,7 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
     min.to(max).foldRight(0)( (size: T.MineSize, count: Int) => {
       val overlap_clue = Clue(size, overlap)
       val without_pos  = overlap_clue -- clue
-      without_pos.count * exclusive_count(overlap_clue) + count
-    })
+      without_pos.count * exclusive_count(overlap_clue) + count})
 
   lazy val min_hit = List(min, 1).max
 
@@ -175,8 +169,9 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
     set.foldRight(1)( (clue: Clue, count: Int) =>
       (clue -- overlap_clue).count * count)
 
-  def +(clue: Clue): Conclusion = Conclusion(tile, set + clue)
-}
+  def +(clue: Clue): Conclusion = Conclusion(tile, set + clue)}
+
+
 
 trait MapUtil{
   val map: T.MineMap
@@ -197,22 +192,20 @@ trait MapUtil{
           val yy = tile._2 + y
           map.get((xx, yy)) match{
             case Some(size) => result.updated((xx, yy), size) // TODO: insert?
-            case _          => result
-          }
-        }
-      )
-    )
-}
+            case _          => result}}))}
+
+
 
 case class Segment(val map: T.MineMap) extends MapUtil{
   // lazy val conclusions: List[Conclusion]
 }
 
+
+
 case class Imp(val map: T.MineMap) extends MapUtil{
   def debug: Imp = {
     println(choices.filter(_._1 > 0.0))
-    return this
-  }
+    return this}
 
 
   // pick the best result
@@ -235,9 +228,7 @@ case class Imp(val map: T.MineMap) extends MapUtil{
           else{
             val segment = Segment(expand_available(available, T.EmptyMineMap))
             (segment :: segments, set ++ segment.map.keys)
-          }
-        }
-    )._1
+    }})._1
 
   def expand_available(available: T.Tile, result: T.MineMap): T.MineMap =
     nearby(available, map_dug).foldRight(result)(
@@ -246,8 +237,7 @@ case class Imp(val map: T.MineMap) extends MapUtil{
           result
         else
           expand_dug(dug_size._1,
-                     result + dug_size) ++ result
-    )
+                     result + dug_size) ++ result)
 
   def expand_dug(dug: T.Tile, result: T.MineMap): T.MineMap =
     nearby(dug, map_available).foldRight(result)(
@@ -256,8 +246,7 @@ case class Imp(val map: T.MineMap) extends MapUtil{
           result
         else
           expand_available(available_size._1,
-                           result + available_size) ++ result
-    )
+                           result + available_size) ++ result)
 
   // all choices (available block) with calculated priority
   lazy val choices: T.Choices = map_available.foldRight(T.EmptyChoices)(
@@ -267,12 +256,13 @@ case class Imp(val map: T.MineMap) extends MapUtil{
         (tile_size: (T.Tile, T.MineSize), con: Conclusion) => {
           val remaining = tile_size._2 - nearby(tile_size._1, map_mine).size
           val set = T.EmptyTileSet ++ nearby(tile_size._1, map_available).keys
-          con + Clue(remaining, set)
-        })
+          con + Clue(remaining, set)})
       (conclusion.debug.conclude.probability, tile_size._1) :: result
     }).sortBy(-_._1)
   )
 }
+
+
 
 object Imp{
   def create(map: Array[Array[Int]]): Imp = {
@@ -281,8 +271,4 @@ object Imp{
 
     Imp(0.until(width).foldRight(T.EmptyMineMap)(
       (x: T.Index, m: T.MineMap) => 0.until(height).foldRight(m)(
-        (y: T.Index, m: T.MineMap) => m.insert((x, y), map(x)(y))
-      )
-    ))
-  }
-}
+        (y: T.Index, m: T.MineMap) => m.insert((x, y), map(x)(y)))))}}
