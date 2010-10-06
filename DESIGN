@@ -6,6 +6,6 @@
 -           Clause < AbstractClause: created via the map information
 - ConjunctedClause < AbstractClause: two or more clauses conjuncted together
 -   DefiniteClause < AbstractClause: with definite probability via calculation
--   Conclusion contains     clauses: tells the probability of certain block
+-   Conclusion contains     clauses: tells the probability of a certain block
 -      Segment contains conclusions: a standalone map in the entire map
 -          Imp contains    segments: breaks the map into segments
