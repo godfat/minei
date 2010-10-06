@@ -179,6 +179,15 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
 }
 
 trait MapUtil{
+  val map: T.MineMap
+
+  // blocks that have already been dug
+  lazy val map_dug      : T.MineMap = map.filter(_._2 >= T.dug)
+  // blocks that we need to examine
+  lazy val map_available: T.MineMap = map.filter(_._2 == T.available)
+  // blocks that contain a mine
+  lazy val map_mine     : T.MineMap = map.filter(_._2 == T.mine)
+
   // take nearby blocks
   def nearby(tile: T.Tile, map: T.MineMap): T.MineMap =
     (-1).to(1).foldRight(T.EmptyMineMap)(
@@ -195,7 +204,7 @@ trait MapUtil{
     )
 }
 
-case class Segment(map: T.MineMap) extends MapUtil{
+case class Segment(val map: T.MineMap) extends MapUtil{
   // lazy val conclusions: List[Conclusion]
 }
 
@@ -205,12 +214,6 @@ case class Imp(val map: T.MineMap) extends MapUtil{
     return this
   }
 
-  // blocks that have already been dug
-  lazy val map_dug      : T.MineMap = map.filter(_._2 >= T.dug)
-  // blocks that we need to examine
-  lazy val map_available: T.MineMap = map.filter(_._2 == T.available)
-  // blocks that contain a mine
-  lazy val map_mine     : T.MineMap = map.filter(_._2 == T.mine)
 
   // pick the best result
   lazy val fireball: T.Tile =
