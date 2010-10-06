@@ -41,10 +41,10 @@ object T{
   lazy val TileSet = TreeSet
   lazy val ClueSet = TreeSet
 
-  lazy val EmptyMineMap = MineMap[Tile, MineSize]()
-  lazy val EmptyChoices = Choices[(Probability, Tile)]()
-  lazy val EmptyTileSet = TileSet[Tile]()
-  lazy val EmptyClueSet = TreeSet[Clue]()}
+  lazy val emptyMineMap = MineMap[Tile, MineSize]()
+  lazy val emptyChoices = Choices[(Probability, Tile)]()
+  lazy val emptyTileSet = TileSet[Tile]()
+  lazy val emptyClueSet = TreeSet[Clue]()}
 
 
 
@@ -94,7 +94,7 @@ case class ConjunctedClue(val min  : T.MineSize,
 }
 
 // set is used to filter the same clues
-case class Conclusion(tile: T.Tile, clues: T.ClueSet = T.EmptyClueSet){
+case class Conclusion(tile: T.Tile, clues: T.ClueSet = T.emptyClueSet){
   def debug: Conclusion = {
     print(tile)
     print(": probability: ")
@@ -188,7 +188,7 @@ trait MapUtil{
 
   // take nearby blocks
   def nearby(tile: T.Tile, map: T.MineMap): T.MineMap =
-    (-1).to(1).foldRight(T.EmptyMineMap)((x, result) =>
+    (-1).to(1).foldRight(T.emptyMineMap)((x, result) =>
       (-1).to(1).foldRight(result)((y, result) => {
         val xx = tile._1 + x
         val yy = tile._2 + y
@@ -200,12 +200,12 @@ trait MapUtil{
 
 case class Segment(val map: T.MineMap) extends MapUtil{
 
-  lazy val clues: T.ClueSet = map_dug.foldRight(T.EmptyClueSet)(
+  lazy val clues: T.ClueSet = map_dug.foldRight(T.emptyClueSet)(
     (tile_size, result) => {
       val tile = tile_size._1
       val size = tile_size._2
       val mines = size - nearby(tile, map_mine).size
-      val tiles = T.EmptyTileSet ++ nearby(tile, map_available).keys
+      val tiles = T.emptyTileSet ++ nearby(tile, map_available).keys
       result + Clue(mines, tiles)})
 
   lazy val conclusions =
@@ -231,7 +231,7 @@ case class Imp(val map: T.MineMap) extends MapUtil{
   lazy val choices50: T.Choices = choices.filter(_._1 >= 0.5)
 
   lazy val segments: List[Segment] =
-    map_available.foldRight((List[Segment](), T.EmptyTileSet))(
+    map_available.foldRight((List[Segment](), T.emptyTileSet))(
       (available_size, segments_tiles) => {
         val available = available_size._1
         val size      = available_size._2
@@ -240,7 +240,7 @@ case class Imp(val map: T.MineMap) extends MapUtil{
         if(tiles.contains(available)) // already in some segment
           segments_tiles
         else{
-          val segment = Segment(expand_available(available, T.EmptyMineMap))
+          val segment = Segment(expand_available(available, T.emptyMineMap))
           (segment :: segments, tiles ++ segment.map.keys)
     }})._1
 
@@ -263,13 +263,13 @@ case class Imp(val map: T.MineMap) extends MapUtil{
                            result + available_size) ++ result)
 
   // all choices (available block) with calculated priority
-  lazy val choices: T.Choices = map_available.foldRight(T.EmptyChoices)(
+  lazy val choices: T.Choices = map_available.foldRight(T.emptyChoices)(
     (tile_size, result) => ({
       val tile = tile_size._1
       val conclusion = nearby(tile, map_dug).foldRight(Conclusion(tile))(
         (tile_size, con) => {
           val remaining = tile_size._2 - nearby(tile_size._1, map_mine).size
-          val set = T.EmptyTileSet ++ nearby(tile_size._1, map_available).keys
+          val set = T.emptyTileSet ++ nearby(tile_size._1, map_available).keys
           con + Clue(remaining, set)})
       (conclusion.debug.conclude.probability, tile_size._1) :: result
     }).sortBy(-_._1)
@@ -283,6 +283,6 @@ object Imp{
     val width : Int = map.size
     val height: Int = map.head.size
 
-    Imp(0.until(width).foldRight(T.EmptyMineMap)(
+    Imp(0.until(width).foldRight(T.emptyMineMap)(
       (x: T.Index, result) => 0.until(height).foldRight(result)(
         (y: T.Index, result) => result.insert((x, y), map(x)(y)))))}}
