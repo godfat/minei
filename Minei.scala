@@ -198,18 +198,17 @@ trait MapUtil{
 
 case class Segment(val map: T.MineMap) extends MapUtil{
 
-  lazy val conclusions = map_available.map(
-    (tile_size0: (T.Tile, T.MineSize)) => {
-      val tile0 = tile_size0._1
-      nearby(tile0, map_dug).foldRight(Conclusion(tile0))(
-        (tile_size1: (T.Tile, T.MineSize), conclusion: Conclusion) => {
-          val tile1 = tile_size1._1
-          val size1 = tile_size1._2
-          val remaining = size1 - nearby(tile1, map_mine).size
-          val set = T.EmptyTileSet ++ nearby(tile1, map_available).keys
-          conclusion + Clue(remaining, set)})})
+  lazy val clauses: T.ClueSet = map_dug.foldRight(T.EmptyClueSet)(
+    (tile_size: (T.Tile, T.MineSize), result: T.ClueSet) => {
+      val tile = tile_size._1
+      val size = tile_size._2
+      val remaining = size - nearby(tile, map_mine).size
+      val set = T.EmptyTileSet ++ nearby(tile, map_available).keys
+      result + Clue(remaining, set)})
 
-  // lazy val clauses =
+  lazy val conclusions =
+    map_available.keys.map((tile: T.Tile) => Conclusion(tile, clauses))
+
   // lazy val conjuncted_clauses =
   // lazy val exclusive_clauses =
 }
