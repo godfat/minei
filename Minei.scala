@@ -199,12 +199,14 @@ trait MapUtil{
 case class Segment(val map: T.MineMap) extends MapUtil{
 
   lazy val conclusions = map_available.map(
-    (tile_size: (T.Tile, T.MineSize)) => {
-      val tile: T.Tile     = tile_size._1
-      nearby(tile, map_dug).foldRight(Conclusion(tile))(
-        (tile_size: (T.Tile, T.MineSize), conclusion: Conclusion) => {
-          val remaining = tile_size._2 - nearby(tile_size._1, map_mine).size
-          val set = T.EmptyTileSet ++ nearby(tile_size._1, map_available).keys
+    (tile_size0: (T.Tile, T.MineSize)) => {
+      val tile0 = tile_size0._1
+      nearby(tile0, map_dug).foldRight(Conclusion(tile0))(
+        (tile_size1: (T.Tile, T.MineSize), conclusion: Conclusion) => {
+          val tile1 = tile_size1._1
+          val size1 = tile_size1._2
+          val remaining = size1 - nearby(tile1, map_mine).size
+          val set = T.EmptyTileSet ++ nearby(tile1, map_available).keys
           conclusion + Clue(remaining, set)})})
 
   // lazy val clauses =
