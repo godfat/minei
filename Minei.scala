@@ -48,15 +48,15 @@ object T{
 
 
 
-trait AbstractClue{ val probability: T.Probability }
+trait AbstractClue{val probability: T.Probability}
 
-case class DefiniteClue(override val probability: T.Probability)
+case class DefiniteClue(val probability: T.Probability)
   extends AbstractClue
 
 case class Clue(val size: T.MineSize, val tiles: T.TileSet)
   extends AbstractClue with Ordered[Clue]{
   // we want descendant ordering, so use negative numbers
-  override lazy val probability: T.Probability =
+  lazy val probability: T.Probability =
     if(tiles.isEmpty) 0 else size.toDouble / tiles.size
 
   lazy val count: Int = {
@@ -87,7 +87,11 @@ case class Clue(val size: T.MineSize, val tiles: T.TileSet)
 
 
 
-// case class ConjunctedClues
+case class ConjunctedClue(val min  : T.MineSize,
+                          val max  : T.MineSize,
+                          val tiles: T.TileSet) extends AbstractClue{
+  val probability = 0.0
+}
 
 // set is used to filter the same clues
 case class Conclusion(tile: T.Tile, clues: T.ClueSet = T.EmptyClueSet){
