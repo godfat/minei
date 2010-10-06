@@ -53,20 +53,20 @@ trait AbstractClue{ val probability: T.Probability }
 case class DefiniteClue(override val probability: T.Probability)
   extends AbstractClue
 
-case class Clue(val size: T.MineSize, val set: T.TileSet)
+case class Clue(val size: T.MineSize, val tiles: T.TileSet)
   extends AbstractClue with Ordered[Clue]{
   // we want descendant ordering, so use negative numbers
   override lazy val probability: T.Probability =
-    if(set.isEmpty) 0 else size.toDouble / set.size
+    if(tiles.isEmpty) 0 else size.toDouble / tiles.size
 
   lazy val count: Int = {
-    val n = set.size
+    val n = tiles.size
     val k = size
     factorial(n, n - k + 1) / factorial(k)}
 
   def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
-  def --(that: Clue): Clue = if(that.set.subsetOf(set))
-                               Clue(size - that.size, set -- that.set)
+  def --(that: Clue): Clue = if(that.tiles.subsetOf(tiles))
+                               Clue(size - that.size, tiles -- that.tiles)
                              else
                                this
 
@@ -76,13 +76,13 @@ case class Clue(val size: T.MineSize, val set: T.TileSet)
     if(size_compare != 0)
       size_compare
 
-    else if(set.size != that.set.size)
-      set.size.compare(that.set.size)
+    else if(tiles.size != that.tiles.size)
+      tiles.size.compare(that.tiles.size)
 
     else
-      set.zip(that.set).find((tiles) => tiles._1 != tiles._2 ) match{
-        case Some(tiles) => Ordering[T.Tile].compare(tiles._1, tiles._2)
-        case None        => 0}}}
+      tiles.zip(that.tiles).find((tt) => tt._1 != tt._2) match{
+        case Some(tt) => Ordering[T.Tile].compare(tt._1, tt._2)
+        case None     => 0}}}
   //   end horrible! why there's no default lexical comparison?
 
 
@@ -100,14 +100,14 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
     println(set)
     return this}
 
-  lazy val tiles: List[T.TileSet] = set.map(_.set).toList
+  lazy val tiles: List[T.TileSet] = set.map(_.tiles).toList
   lazy val conclude: AbstractClue = compact.conclude_compacted
   // conclude after compact
   lazy val conclude_compacted: AbstractClue =
     if(set.isEmpty)
       DefiniteClue(0)
     else
-      set.find((clue) => clue.size == clue.set.size) match{
+      set.find((clue) => clue.size == clue.tiles.size) match{
         case Some(clue) => clue
         case None       => DefiniteClue(probability)}
 
@@ -149,7 +149,7 @@ case class Conclusion(tile: T.Tile, set: T.ClueSet = T.EmptyClueSet){
   lazy val min_hit = List(min, 1).max
 
   lazy val min: T.MineSize =
-    (set.map((clue) => clue.size - (clue.set.size - overlap.size)
+    (set.map((clue) => clue.size - (clue.tiles.size - overlap.size)
     ) +            0).max
 
   lazy val max: T.MineSize =
