@@ -48,7 +48,9 @@ object T{
 
 
 
-trait AbstractClue{val probability: T.Probability}
+trait      AbstractClue{val probability: T.Probability}
+case class DefiniteClue(val probability: T.Probability) extends AbstractClue
+
 trait Clue extends AbstractClue with Ordered[Clue]{
   val min: T.MineSize
   val max: T.MineSize
@@ -96,8 +98,7 @@ trait Clue extends AbstractClue with Ordered[Clue]{
         case None     => 0}}}
   //   end horrible! why there's no default lexical comparison?
 
-case class DefiniteClue(val probability: T.Probability)
-  extends AbstractClue
+
 
 case class ConjunctedClue(val min  : T.MineSize,
                           val max  : T.MineSize,
