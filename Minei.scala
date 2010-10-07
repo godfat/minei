@@ -64,6 +64,7 @@ trait Clue extends AbstractClue with Ordered[Clue]{
 
   def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
   def --(that: Clue): Clue = if(that.tiles.subsetOf(tiles))
+                               // TODO: this is not conjunction :(
                                ConjunctedClue(
                                  List(0, this.min - that.max).max,
                                  List(that.tiles.size,
