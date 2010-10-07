@@ -31,6 +31,16 @@
 // println(c1.compare(c2)) // -1
 // println(c2.compare(c3)) // -1
 
+/*
+segment properties:
+
+  val imp: Imp
+  // 0
+  imp.segments.foldRight1(_.map ++ _.map) == imp.map
+  // 1
+  imp.segments.foldRight1(_.mines + _.mines) == imp.mines
+*/
+
 import org.godfat.minei.Imp
 
 val map =
