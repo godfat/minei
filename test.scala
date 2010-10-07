@@ -39,6 +39,13 @@ segment properties:
   imp.segments.foldRight1(_.map ++ _.map) == imp.map
   // 1
   imp.segments.foldRight1(_.mines + _.mines) == imp.mines
+
+clue properties:
+
+  // 0
+  clue1 -- clue0 implies clue0 <= clue1
+  clue0 <= clue1 implies clue0.min <= clue1.min and
+                         clue0.max <= clue1.max and
 */
 
 import org.godfat.minei.Imp
