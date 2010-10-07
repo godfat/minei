@@ -49,16 +49,12 @@ object T{
 
 
 trait AbstractClue{val probability: T.Probability}
+trait Clue extends AbstractClue with Ordered[Clue]{
+  val min: T.MineSize
+  val max: T.MineSize
+  val tiles: T.TileSet
 
-case class DefiniteClue(val probability: T.Probability)
-  extends AbstractClue
-
-case class Clue(val size: T.MineSize, val tiles: T.TileSet)
-  extends AbstractClue with Ordered[Clue]{
   // we want descendant ordering, so use negative numbers
-  lazy val probability: T.Probability =
-    if(tiles.isEmpty) 0 else size.toDouble / tiles.size
-
   lazy val count: Int = {
     val n = tiles.size
     val k = size
@@ -66,13 +62,28 @@ case class Clue(val size: T.MineSize, val tiles: T.TileSet)
 
   def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
   def --(that: Clue): Clue = if(that.tiles.subsetOf(tiles))
-                               Clue(size - that.size, tiles -- that.tiles)
+                               ConjunctedClue(
+                                 List(0, this.min - that.max).max,
+                                 List(that.tiles.size,
+                                      this.max - that.min).min,
+                                 tiles -- that.tiles)
                              else
-                               this
+                               this // should not happen
+
+  def &(that: Clue): Clue = {
+    val intersected = tiles & that.tiles
+    val min = List(0,
+                   this.min - (this.tiles.size - intersected.size),
+                   that.min - (that.tiles.size - intersected.size)).max
+    val max = List(intersected.size, this.max, that.max).min
+    ConjunctedClue(min, max, intersected)
+  }
 
   // begin horrible! why there's no default lexical comparison?
   def compare(that: Clue) = {
-    val size_compare: Int = size.compare(that.size)
+    val size_compare: Int =
+      Ordering[(T.MineSize, T.MineSize)].compare((this.min, this.max),
+                                                 (that.min, that.max))
     if(size_compare != 0)
       size_compare
 
@@ -85,13 +96,21 @@ case class Clue(val size: T.MineSize, val tiles: T.TileSet)
         case None     => 0}}}
   //   end horrible! why there's no default lexical comparison?
 
-
+case class DefiniteClue(val probability: T.Probability)
+  extends AbstractClue
 
 case class ConjunctedClue(val min  : T.MineSize,
                           val max  : T.MineSize,
-                          val tiles: T.TileSet) extends AbstractClue{
-  val probability = 0.0
-}
+                          val tiles: T.TileSet) extends Clue
+
+
+
+case class ExclusiveClue(val  size: T.MineSize,
+                         val tiles: T.TileSet) extends Clue{
+                         val   min = size
+                         val   max = size}
+
+
 
 // set is used to filter the same clues
 case class Conclusion(tile: T.Tile, clues: T.ClueSet = T.emptyClueSet){
@@ -112,7 +131,7 @@ case class Conclusion(tile: T.Tile, clues: T.ClueSet = T.emptyClueSet){
       DefiniteClue(0)
     else
       clues.find((clue) => clue.size == clue.tiles.size) match{
-        case Some(clue) => clue
+        case Some(clue) => DefiniteClue(1)
         case None       => DefiniteClue(probability)}
 
   // remove useless clue
@@ -128,14 +147,14 @@ case class Conclusion(tile: T.Tile, clues: T.ClueSet = T.emptyClueSet){
   lazy val count: Int = count_hit + count_miss
 
   lazy val count_hit: Int =
-    calculate_count(min_hit, max, Clue(1, T.TileSet(tile)))
+    calculate_count(min_hit, max, ExclusiveClue(1, T.TileSet(tile)))
 
   lazy val count_miss: Int =
-    calculate_count(min, max, Clue(0, T.TileSet(tile)))
+    calculate_count(min, max, ExclusiveClue(0, T.TileSet(tile)))
 
   // same as count, but with only one foldr
   lazy val count_fast: Int =
-    calculate_count(min, max, Clue(0, T.TileSet()))
+    calculate_count(min, max, ExclusiveClue(0, T.TileSet()))
 
   // lazy val combos_all: Int =
   //   overlaps.map((o: Overlap) => o.min.to(o.max).toList).
@@ -146,7 +165,7 @@ case class Conclusion(tile: T.Tile, clues: T.ClueSet = T.emptyClueSet){
 
   private def calculate_count(min: Int, max: Int, clue: Clue): Int =
     min.to(max).foldRight(0)((size, count) => {
-      val overlap_clue = Clue(size, overlap)
+      val overlap_clue = ExclusiveClue(size, overlap)
       val without_pos  = overlap_clue -- clue
       without_pos.count * exclusive_count(overlap_clue) + count})
 
@@ -206,13 +225,19 @@ case class Segment(val map: T.MineMap) extends MapUtil{
       val size = tile_size._2
       val mines = size - nearby(tile, map_mine).size
       val tiles = T.emptyTileSet ++ nearby(tile, map_available).keys
-      result + Clue(mines, tiles)})
+      result + ExclusiveClue(mines, tiles)})
 
   lazy val conclusions =
     map_available.keys.map((tile) => Conclusion(tile, clues))
 
-  // lazy val conjuncted_clues =
+  lazy val conjuncted_clues =
+    combos_pair(clues.toList).map(_ & _)
   // lazy val exclusive_clues =
+
+  private def combos_pair[A](list: List[A]): List[(A, A)] = list match{
+    case Nil       => Nil
+    case (x :: xs) => (for(y <- xs) yield (x, y)) ++ combos_pair(xs)
+  }
 }
 
 
@@ -270,7 +295,7 @@ case class Imp(val map: T.MineMap) extends MapUtil{
         (tile_size, con) => {
           val remaining = tile_size._2 - nearby(tile_size._1, map_mine).size
           val set = T.emptyTileSet ++ nearby(tile_size._1, map_available).keys
-          con + Clue(remaining, set)})
+          con + ExclusiveClue(remaining, set)})
       (conclusion.debug.conclude.probability, tile_size._1) :: result
     }).sortBy(-_._1)
   )
