@@ -100,16 +100,14 @@ trait Clue extends AbstractClue with Ordered[Clue]{
 
 
 
+case class  ExclusiveClue(val  size: T.MineSize,
+                          val tiles: T.TileSet) extends Clue{
+                          val   min = size
+                          val   max = size}
+
 case class ConjunctedClue(val min  : T.MineSize,
                           val max  : T.MineSize,
                           val tiles: T.TileSet) extends Clue
-
-
-
-case class ExclusiveClue(val  size: T.MineSize,
-                         val tiles: T.TileSet) extends Clue{
-                         val   min = size
-                         val   max = size}
 
 
 

@@ -3,9 +3,10 @@
 -                           Minei : the psmonkey AI_Interface adapter
 -                               T : namespace for types, values aliases
 -                    AbstractClue : provides probability
--             Clue < AbstractClue : created via the map information
--   ConjunctedClue < AbstractClue : two or more clues conjuncted together
 -     DefiniteClue < AbstractClue : with definite probability via calculation
+-             Clue < AbstractClue :
+-    ExclusiveClue <         Clue : created via the map information
+-   ConjunctedClue <         Clue : two or more clues conjuncted together
 - Conclusion contains        clues: tells the probability of a certain block
 -    Segment contains  conclusions: a standalone map in the entire map
 -        Imp contains     segments: breaks the map into segments
