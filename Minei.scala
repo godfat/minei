@@ -56,7 +56,6 @@ trait Clue extends AbstractClue with Ordered[Clue]{
   val max: T.MineSize
   val tiles: T.TileSet
 
-  // we want descendant ordering, so use negative numbers
   lazy val count: Int = {
     val n = tiles.size
     val k = size
