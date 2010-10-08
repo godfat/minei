@@ -63,15 +63,15 @@ trait Clue extends AbstractClue with Ordered[Clue]{
     factorial(n, n - k + 1) / factorial(k)}
 
   def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
-  def --(that: Clue): Clue = if(that.tiles.subsetOf(tiles))
-                               // TODO: this is not conjunction :(
-                               ConjunctedClue(
-                                 List(0, this.min - that.max).max,
-                                 List(that.tiles.size,
-                                      this.max - that.min).min,
-                                 tiles -- that.tiles)
-                             else
-                               this // should not happen
+  def --(that: Clue): Clue = {
+    val intersected    = tiles & that.tiles
+    val exclusive_size = tiles.size - intersected.size
+    val min = List(0,
+                   this.min - List(intersected.size, that.max  ).min).max
+    val max = List(exclusive_size
+                   this.max - List(0, that.min - exclusive_size).max).min
+    SubtractedClue(min, max, tiles -- that.tiles)
+  }
 
   def &(that: Clue): Clue = {
     val intersected = tiles & that.tiles
@@ -110,7 +110,9 @@ case class ConjunctedClue(val min  : T.MineSize,
                           val max  : T.MineSize,
                           val tiles: T.TileSet) extends Clue
 
-
+case class SubtractedClue(val min  : T.MineSize,
+                          val max  : T.MineSize,
+                          val tiles: T.TileSet) extends Clue
 
 // set is used to filter the same clues
 case class Conclusion(tile: T.Tile, clues: T.ClueSet = T.emptyClueSet){
