@@ -67,10 +67,9 @@ trait Clue extends AbstractClue with Ordered[Clue]{
     val exclusive_size = tiles.size - intersected.size
     val min = List(0,
                    this.min - List(intersected.size, that.max  ).min).max
-    val max = List(exclusive_size
+    val max = List(exclusive_size,
                    this.max - List(0, that.min - exclusive_size).max).min
-    SubtractedClue(min, max, tiles -- that.tiles)
-  }
+    SubtractedClue(min, max, tiles -- that.tiles)}
 
   def &(that: Clue): Clue = {
     val intersected = tiles & that.tiles
@@ -78,8 +77,7 @@ trait Clue extends AbstractClue with Ordered[Clue]{
                    this.min - (this.tiles.size - intersected.size),
                    that.min - (that.tiles.size - intersected.size)).max
     val max = List(intersected.size, this.max, that.max).min
-    ConjunctedClue(min, max, intersected)
-  }
+    ConjunctedClue(min, max, intersected)}
 
   // begin horrible! why there's no default lexical comparison?
   def compare(that: Clue) = {
