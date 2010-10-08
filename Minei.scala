@@ -56,7 +56,7 @@ trait Clue extends AbstractClue with Ordered[Clue]{
   val max: T.MineSize
   val tiles: T.TileSet
 
-  def --(that: Clue): Clue = {
+  def --(that: Clue): SubtractedClue = {
     val intersected    = tiles & that.tiles
     val exclusive_size = tiles.size - intersected.size
     val min = List(0,
@@ -65,7 +65,7 @@ trait Clue extends AbstractClue with Ordered[Clue]{
                    this.max - List(0, that.min - exclusive_size).max).min
     SubtractedClue(min, max, tiles -- that.tiles)}
 
-  def &(that: Clue): Clue = {
+  def &(that: Clue): ConjunctedClue = {
     val intersected = tiles & that.tiles
     val min = List(0,
                    this.min - (this.tiles.size - intersected.size),
@@ -220,7 +220,7 @@ trait MapUtil{
 
 case class Segment(val map: T.MineMap) extends MapUtil{
 
-  lazy val clues: T.ClueSet = map_dug.foldRight(T.emptyClueSet)(
+  lazy val exclusive_clues: T.ClueSet = map_dug.foldRight(T.emptyClueSet)(
     (tile_size, result) => {
       val tile = tile_size._1
       val size = tile_size._2
@@ -231,14 +231,22 @@ case class Segment(val map: T.MineMap) extends MapUtil{
   lazy val conclusions =
     map_available.keys.map((tile) => Conclusion(tile, clues))
 
-  lazy val conjuncted_clues =
-    combos_pair(clues.toList).map(_ & _)
-  // lazy val exclusive_clues =
+  lazy val clues: List[List[Clue]] = process_clues(exclusive_clues.toList,
+                                                   List())
+
+  private def process_clues(clues : List[Clue],
+                            result: List[List[Clue]]): List[List[Clue]] = {
+    val conjuncted = T.emptyClueSet ++ combos_pair(clues).map(conjunct(_))
+    if(conjuncted.isEmpty)
+      clues :: result
+    else
+      clues :: process_clues(conjuncted.toList, result)}
 
   private def combos_pair[A](list: List[A]): List[(A, A)] = list match{
     case Nil       => Nil
-    case (x :: xs) => (for(y <- xs) yield (x, y)) ++ combos_pair(xs)
-  }
+    case (x :: xs) => (for(y <- xs) yield (x, y)) ++ combos_pair(xs)}
+
+  private def conjunct(cc: (Clue, Clue)): ConjunctedClue = cc._1 & cc._2
 }
 
 
