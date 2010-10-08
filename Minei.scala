@@ -56,12 +56,6 @@ trait Clue extends AbstractClue with Ordered[Clue]{
   val max: T.MineSize
   val tiles: T.TileSet
 
-  lazy val count: Int = {
-    val n = tiles.size
-    val k = size
-    factorial(n, n - k + 1) / factorial(k)}
-
-  def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
   def --(that: Clue): Clue = {
     val intersected    = tiles & that.tiles
     val exclusive_size = tiles.size - intersected.size
@@ -100,8 +94,16 @@ trait Clue extends AbstractClue with Ordered[Clue]{
 
 case class  ExclusiveClue(val  size: T.MineSize,
                           val tiles: T.TileSet) extends Clue{
-                          val   min = size
-                          val   max = size}
+  val min = size
+  val max = size
+
+  lazy val count: Int = {
+    val n = tiles.size
+    val k = size
+    factorial(n, n - k + 1) / factorial(k)}
+
+  def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
+}
 
 case class ConjunctedClue(val min  : T.MineSize,
                           val max  : T.MineSize,
