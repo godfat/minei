@@ -31,12 +31,12 @@ object T{
   type Index       = Int
   type Tile        = (Index, Index)
 
-  type Choices = List[(Probability, Tile)]
+  type Choices = TreeSet[(Probability, Tile)]
   type MineMap = TreeMap[Tile, MineSize]
   type TileSet = TreeSet[Tile]
   type ClueSet = TreeSet[Clue]
 
-  lazy val Choices = List
+  lazy val Choices = TreeSet
   lazy val MineMap = TreeMap
   lazy val TileSet = TreeSet
   lazy val ClueSet = TreeSet
@@ -222,6 +222,17 @@ trait MapUtil{
 
 case class Segment(val map: T.MineMap) extends MapUtil{
 
+  // all choices (available block) with calculated priority
+  lazy val choices: T.Choices =
+    T.emptyChoices ++ conclusions.map((conclusion) =>
+      (conclusion.count.toDouble / count, conclusion.tile))
+
+  lazy val count: Int = 1
+
+  lazy val conclusions =
+    map_available.keys.map((tile) =>
+      Conclusion(tile, exclusive_clues, conjuncted_clues))
+
   lazy val exclusive_clues: T.ClueSet = map_dug.foldRight(T.emptyClueSet)(
     (tile_size, result) => {
       val tile = tile_size._1
@@ -229,10 +240,6 @@ case class Segment(val map: T.MineMap) extends MapUtil{
       val mines = size - nearby(tile, map_mine).size
       val tiles = T.emptyTileSet ++ nearby(tile, map_available).keys
       result + ExclusiveClue(mines, tiles)})
-
-  lazy val conclusions =
-    map_available.keys.map((tile) =>
-      Conclusion(tile, exclusive_clues, conjuncted_clues))
 
   lazy val conjuncted_clues: List[T.ClueSet] =
     conjunct_clues(exclusive_clues.toList)
@@ -260,11 +267,10 @@ case class Imp(val map: T.MineMap) extends MapUtil{
     println(choices.filter(_._1 > 0.0))
     return this}
 
-
   // pick the best result
   lazy val aim: T.Tile =
-    if(choices50.isEmpty) choices  .last._2
-    else                  choices50.head._2
+    if(choices50.isEmpty) choices  .head._2
+    else                  choices50.last._2
 
   lazy val choices50: T.Choices = choices.filter(_._1 >= 0.5)
 
@@ -300,18 +306,8 @@ case class Imp(val map: T.MineMap) extends MapUtil{
           expand_available(available_size._1,
                            result + available_size) ++ result)
 
-  // all choices (available block) with calculated priority
-  lazy val choices: T.Choices = map_available.foldRight(T.emptyChoices)(
-    (tile_size, result) => ({
-      val tile = tile_size._1
-      val conclusion = nearby(tile, map_dug).foldRight(Conclusion(tile))(
-        (tile_size, con) => {
-          val remaining = tile_size._2 - nearby(tile_size._1, map_mine).size
-          val set = T.emptyTileSet ++ nearby(tile_size._1, map_available).keys
-          con + ExclusiveClue(remaining, set)})
-      (conclusion.debug.conclude.probability, tile_size._1) :: result
-    }).sortBy(-_._1)
-  )
+  lazy val choices: T.Choices = segments.foldRight(T.emptyChoices)(
+    (segment, result) => segment.choices ++ result)
 }
 
 
