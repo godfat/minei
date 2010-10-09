@@ -109,8 +109,9 @@ case class  ExclusiveClue(val  size: T.MineSize,
     val k = size
     factorial(n, n - k + 1) / factorial(k)}
 
-  def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
-}
+  def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)}
+
+
 
 case class ConjunctedClue(val min  : T.MineSize,
                           val max  : T.MineSize,
