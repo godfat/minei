@@ -231,16 +231,17 @@ case class Segment(val map: T.MineMap) extends MapUtil{
   lazy val conclusions =
     map_available.keys.map((tile) => Conclusion(tile, clues))
 
-  lazy val clues: List[List[Clue]] = process_clues(exclusive_clues.toList,
-                                                   List())
+  lazy val conjuncted_clues: List[T.ClueSet] =
+    conjunct_clues(exclusive_clues.toList)
 
-  private def process_clues(clues : List[Clue],
-                            result: List[List[Clue]]): List[List[Clue]] = {
+  private def conjunct_clues( clues: List[Clue],
+                             result: List[T.ClueSet] = List()):
+                                     List[T.ClueSet] = {
     val conjuncted = T.emptyClueSet ++ combos_pair(clues).map(conjunct(_))
     if(conjuncted.isEmpty)
-      clues :: result
+      result
     else
-      clues :: process_clues(conjuncted.toList, result)}
+      conjuncted :: conjunct_clues(conjuncted.toList, result)}
 
   private def combos_pair[A](list: List[A]): List[(A, A)] = list match{
     case Nil       => Nil
