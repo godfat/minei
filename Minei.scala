@@ -195,7 +195,35 @@ case class Segment(val map: T.MineMap) extends MapUtil{
   //   T.emptyChoices ++ conclusions.map((conclusion) =>
   //     (conclusion.count.toDouble / count, conclusion.tile))
 
-  lazy val count: Int = 1
+  // private def calculate_count(min: Int, max: Int, clue: Clue): Int =
+  //   min.to(max).foldRight(0)((size, count) => {
+  //     val overlap_clue = ExclusiveClue(size, overlap)
+  //     val without_pos  = overlap_clue -- clue
+  //     without_pos.count * exclusive_count(overlap_clue) + count})
+  //
+  // def exclusive_count(overlap_clue: Clue): Int =
+  //   clues.foldRight(1)((clue, count) => (clue -- overlap_clue).count * count)
+
+  lazy val count: Int = 0
+
+  private def split_conjuncted_clues_combos(clues: T.ClueSet):
+                                                   List[T.ClueSet] =
+    expand_combos(clues).map(split_conjuncted_clues(clues, _))
+
+  private def expand_combos(clues: T.ClueSet): List[List[T.MineSize]] =
+    combos(clues.map((clue) => clue.min.to(clue.max).toList).toList)
+
+  private def split_conjuncted_clues(clues: T.ClueSet,
+                                     sizes: List[T.MineSize]):
+                                            T.ClueSet =
+    T.emptyClueSet ++ clues.zip(sizes).map((cs) =>
+      ExclusiveClue(cs._2, cs._1.tiles))
+
+  // private def calculate_count(min: Int, max: Int, hit_clue: Clue): Int =
+  //   min.to(max).foldRight(0)((size, count) => {
+  //     val supposed_clue = ExclusiveClue(size, clue.tiles)
+  //     val without_hit   = supposed_clue -- hit_clue
+  //     without_hit.count * exclusive_count(overlap_clue) + count})
 
   lazy val conclusions =
     map_available.keys.map((tile) =>
@@ -221,11 +249,16 @@ case class Segment(val map: T.MineMap) extends MapUtil{
     else
       conjuncted :: conjunct_clues(conjuncted.toList, result)}
 
+  private def conjunct(cc: (Clue, Clue)): Clue = cc._1 & cc._2
+
   private def combos_pair[A](list: List[A]): List[(A, A)] = list match{
     case Nil       => Nil
     case (x :: xs) => (for(y <- xs) yield (x, y)) ++ combos_pair(xs)}
 
-  private def conjunct(cc: (Clue, Clue)): ConjunctedClue = cc._1 & cc._2
+  private def combos[A](list: List[List[A]]): List[List[A]] = list match{
+    case Nil         => List(Nil)
+    case (xs :: xss) => for(x <- xs; rs <- combos(xss)) yield x :: rs
+  }
 }
 
 
