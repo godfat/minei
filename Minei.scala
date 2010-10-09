@@ -124,85 +124,45 @@ case class SubtractedClue(val min  : T.MineSize,
 // set is used to filter the same clues
 case class Conclusion(            tile: T.Tile,
                        exclusive_clues: T.ClueSet,
-                      conjuncted_clues: List[T.ClueSet]){
-  def debug: Conclusion = {
-    print(tile)
-    print(": probability: ")
-    print(count_hit)
-    print(" / ")
-    println(count)
-    println(clues)
-    return this}
+                      conjuncted_clues: List[T.ClueSet]){}
+  // def debug: Conclusion = {
+  //   print(tile)
+  //   print(": probability: ")
+  //   print(count_hit)
+  //   print(" / ")
+  //   println(count)
+  //   println(exclusive_clues)
+  //   return this}
 
-  lazy val tiles: List[T.TileSet] = clues.map(_.tiles).toList
-  lazy val conclude: AbstractClue = compact.conclude_compacted
   // conclude after compact
-  lazy val conclude_compacted: AbstractClue =
-    if(clues.isEmpty)
-      DefiniteClue(0)
-    else
-      clues.find((clue) => clue.size == clue.tiles.size) match{
-        case Some(clue) => DefiniteClue(1)
-        case None       => DefiniteClue(probability)}
+  // lazy val conclude_compacted: AbstractClue =
+  //   if(clues.isEmpty)
+  //     DefiniteClue(0)
+  //   else
+  //     clues.find((clue) => clue.size == clue.tiles.size) match{
+  //       case Some(clue) => DefiniteClue(1)
+  //       case None       => DefiniteClue(probability)}
 
-  // remove useless clue
-  lazy val compact: Conclusion = Conclusion(tile, clues.filter(_.size > 0))
-
-  // TODO: we haven't considered complex overlap,
-  //       say A overlaps with B,
-  //           B overlaps with C, and
-  //           A didn't overlap with C
-  lazy val probability: T.Probability =
-    if(count == 0) 0 else count_hit.toDouble / (count_hit + count_miss)
-
-  lazy val count: Int = count_hit + count_miss
-
-  lazy val count_hit: Int =
-    calculate_count(min_hit, max, ExclusiveClue(1, T.TileSet(tile)))
-
-  lazy val count_miss: Int =
-    calculate_count(min, max, ExclusiveClue(0, T.TileSet(tile)))
-
-  // same as count, but with only one foldr
-  lazy val count_fast: Int =
-    calculate_count(min, max, ExclusiveClue(0, T.TileSet()))
-
-  // lazy val combos_all: Int =
-  //   overlaps.map((o: Overlap) => o.min.to(o.max).toList).
-  //     combinations.foldRight(0)(
-  //       (sizes: List[Int], combos: Int) =>
-  //         overlap + combos
-  //     )
-
-  private def calculate_count(min: Int, max: Int, clue: Clue): Int =
-    min.to(max).foldRight(0)((size, count) => {
-      val overlap_clue = ExclusiveClue(size, overlap)
-      val without_pos  = overlap_clue -- clue
-      without_pos.count * exclusive_count(overlap_clue) + count})
-
-  lazy val min_hit = List(min, 1).max
-
-  lazy val min: T.MineSize =
-    (clues.map((clue) => clue.size - (clue.tiles.size - overlap.size)
-    ) +            0).max
-
-  lazy val max: T.MineSize =
-    (clues.map((clue) => clue.size
-    ) + overlap.size).min
-
-  lazy val overlap: T.TileSet =
-    if(tiles.isEmpty) T.TileSet()
-    else              tiles.tail.foldRight(tiles.head)(_.intersect(_))
-
-  // lazy val overlap_list: List[List[T.Pos]] =
-
-
-  lazy val exclusive_overlap: T.TileSet = overlap - tile
-
-  def exclusive_count(overlap_clue: Clue): Int =
-    clues.foldRight(1)((clue, count) => (clue -- overlap_clue).count * count)
-
-  def +(clue: Clue): Conclusion = Conclusion(tile, clues + clue)}
+  // lazy val count: Int = count_hit + count_miss
+  //
+  // lazy val count_hit: Int =
+  //   calculate_count(min_hit, max, ExclusiveClue(1, T.TileSet(tile)))
+  //
+  // lazy val count_miss: Int =
+  //   calculate_count(min, max, ExclusiveClue(0, T.TileSet(tile)))
+  //
+  // // same as count, but with only one foldr
+  // lazy val count_fast: Int =
+  //   calculate_count(min, max, ExclusiveClue(0, T.TileSet()))
+  //
+  // private def calculate_count(min: Int, max: Int, clue: Clue): Int =
+  //   min.to(max).foldRight(0)((size, count) => {
+  //     val overlap_clue = ExclusiveClue(size, overlap)
+  //     val without_pos  = overlap_clue -- clue
+  //     without_pos.count * exclusive_count(overlap_clue) + count})
+  //
+  // def exclusive_count(overlap_clue: Clue): Int =
+  //   clues.foldRight(1)((clue, count) => (clue -- overlap_clue).count * count)}
 
 
 
@@ -231,9 +191,9 @@ trait MapUtil{
 case class Segment(val map: T.MineMap) extends MapUtil{
 
   // all choices (available block) with calculated priority
-  lazy val choices: T.Choices =
-    T.emptyChoices ++ conclusions.map((conclusion) =>
-      (conclusion.count.toDouble / count, conclusion.tile))
+  // lazy val choices: T.Choices =
+  //   T.emptyChoices ++ conclusions.map((conclusion) =>
+  //     (conclusion.count.toDouble / count, conclusion.tile))
 
   lazy val count: Int = 1
 
