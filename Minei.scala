@@ -114,7 +114,9 @@ case class SubtractedClue(val min  : T.MineSize,
                           val tiles: T.TileSet) extends Clue
 
 // set is used to filter the same clues
-case class Conclusion(tile: T.Tile, clues: T.ClueSet = T.emptyClueSet){
+case class Conclusion(            tile: T.Tile,
+                       exclusive_clues: T.ClueSet,
+                      conjuncted_clues: List[T.ClueSet]){
   def debug: Conclusion = {
     print(tile)
     print(": probability: ")
@@ -229,7 +231,8 @@ case class Segment(val map: T.MineMap) extends MapUtil{
       result + ExclusiveClue(mines, tiles)})
 
   lazy val conclusions =
-    map_available.keys.map((tile) => Conclusion(tile, clues))
+    map_available.keys.map((tile) =>
+      Conclusion(tile, exclusive_clues, conjuncted_clues))
 
   lazy val conjuncted_clues: List[T.ClueSet] =
     conjunct_clues(exclusive_clues.toList)
