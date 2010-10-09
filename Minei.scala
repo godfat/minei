@@ -44,7 +44,7 @@ object T{
   lazy val emptyMineMap = MineMap[Tile, MineSize]()
   lazy val emptyChoices = Choices[(Probability, Tile)]()
   lazy val emptyTileSet = TileSet[Tile]()
-  lazy val emptyClueSet = TreeSet[Clue]()}
+  lazy val emptyClueSet = ClueSet[Clue]()}
 
 
 
