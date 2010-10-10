@@ -257,9 +257,7 @@ case class Segment(val map: T.MineMap) extends MapUtil{
 
   private def combos[A](list: List[List[A]]): List[List[A]] = list match{
     case Nil         => List(Nil)
-    case (xs :: xss) => for(x <- xs; rs <- combos(xss)) yield x :: rs
-  }
-}
+    case (xs :: xss) => for(x <- xs; rs <- combos(xss)) yield x :: rs}}
 
 
 
@@ -308,8 +306,7 @@ case class Imp(val map: T.MineMap) extends MapUtil{
                            result + available_size) ++ result)
 
   lazy val choices: T.Choices = segments.foldRight(T.emptyChoices)(
-    (segment, result) => segment.choices ++ result)
-}
+    (segment, result) => segment.choices ++ result)}
 
 
 
