@@ -84,9 +84,6 @@ trait Clue extends Ordered[Clue]{
                      that.min - (that.tiles.size - intersected.size)).max
       val max = List(intersected.size, this.max, that.max).min
 
-      if(min > max)
-      println("I: " + this + "  &  " + that + " : " + min + "/" + max)
-
       if(min == max)  ExclusiveClue(min,      intersected)
       else           ConjunctedClue(min, max, intersected)}}
 
@@ -147,7 +144,7 @@ trait MapUtil{
   // blocks that contain a mine
   lazy val map_mine     : T.MineMap = map.filter(_._2 == T.mine)
 
-  // take nearby blocks
+  // take nearby tiles
   def nearby(tile: T.Tile, map: T.MineMap): T.MineMap =
     (-1).to(1).foldRight(T.emptyMineMap)((x, result) =>
       (-1).to(1).foldRight(result)((y, result) => {
@@ -161,6 +158,7 @@ trait MapUtil{
 
 case class Segment(val map: T.MineMap) extends MapUtil{
 
+  // nothing we can do if the segment is fully dug
   lazy val isEmpty: Boolean = map_available.isEmpty
 
   // all choices (available block) with calculated priority
@@ -169,6 +167,7 @@ case class Segment(val map: T.MineMap) extends MapUtil{
       {println("Tile " + tile + ": " + count_hit(tile) + " / " + count)
        (count_hit(tile).toDouble / count, tile)})
 
+  // all tiles share the same base count in a segment
   lazy val count: Int = calculate_count(conjuncted_clues.reverse)
 
   def count_hit(tile: T.Tile) =
@@ -265,7 +264,7 @@ case class Imp(val map: T.MineMap) extends MapUtil{
         else{
           val segment = Segment(expand_available(available))
           (segment :: segments, tiles ++ segment.map.keys)
-    }})._1.filter(!_.isEmpty)
+    }})._1.filter(!_.isEmpty) // filter clueless
 
 
 
@@ -280,15 +279,17 @@ case class Imp(val map: T.MineMap) extends MapUtil{
         val    r = result_traveled._1
         val    t = result_traveled._2
 
+        // already visited
         if(t.contains(dug))
           (r, t)
         else{
           val tdug = t + dug
+          // filter impossibles
           if(nearby(dug, map_mine).size == size)
             (r -- nearby(dug, map_available).keys, tdug)
           else
             (expand_dug(dug, r + dug_size, tdug), tdug)}})._1 ++
-    nearby(available, map_mine)
+    nearby(available, map_mine) // don't forget mines!
 
   private def expand_dug(     dug: T.Tile,
                            result: T.MineMap,

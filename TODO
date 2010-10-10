@@ -1,7 +1,8 @@
 = minei todo list
 
 (O) 0. filter out impossible tiles
-       (tkcn) (reduce computing)
+       (tkcn) (not only for reducing computing, if we don't filter it,
+               it's very hard to calculate the real combos)
 
 (X) 1. short-circuit when best match (100%) found. (reduce computing)
 
