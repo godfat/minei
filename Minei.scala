@@ -188,18 +188,18 @@ case class Segment(val map: T.MineMap) extends MapUtil{
 
 
   private def calculate_count(    list: List[T.ClueSet],
-                              excluded: T.ClueSet = T.emptyClueSet,
-                                result: Int = 1): Int =
+                              excluded: T.ClueSet = T.emptyClueSet): Int =
     list match{
       case Nil             =>
-        exclusive_clues.map(_  -- excluded).foldRight(result)(
-          (c, r) => {
-            ExclusiveClue(c.min, c.tiles).count * r})
+        exclusive_clues.map(_  -- excluded).foldRight(1)(
+          (c, result) => {
+            ExclusiveClue(c.min, c.tiles).count * result})
 
       case (clues :: left) =>
-        result + split_conjuncted_clues(clues).foldRight(0)((picked, r) =>
-          r + calculate_count(
-                left.map(T.emptyClueSet ++ _.map(_  -- picked)), picked, r))}
+        split_conjuncted_clues(clues.map(_ -- excluded)).foldRight(0)(
+          (picked, result) =>
+            calculate_count(left.map(T.emptyClueSet ++ _.map(_  -- picked))) +
+            result)}
 
   private def split_conjuncted_clues(clues: T.ClueSet):
                                             List[T.ClueSet] =
@@ -240,6 +240,7 @@ case class Segment(val map: T.MineMap) extends MapUtil{
 case class Imp(val map: T.MineMap) extends MapUtil{
   def debug: Imp = {
     println(segments)
+    println(choices.filter(_._1 > 0.0))
     return this}
 
   // pick the best result
