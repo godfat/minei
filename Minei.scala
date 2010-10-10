@@ -273,7 +273,8 @@ case class Imp(val map: T.MineMap) extends MapUtil{
         if(r.contains(dug_size._1))
           r
         else
-          expand_dug(dug_size._1, r + dug_size) ++ r)
+          expand_dug(dug_size._1, r + dug_size) ++ r) ++
+    nearby(available, map_mine)
 
   private def expand_dug(   dug: T.Tile,
                          result: T.MineMap):
@@ -283,7 +284,8 @@ case class Imp(val map: T.MineMap) extends MapUtil{
         if(r.contains(available_size._1))
           r
         else
-          expand_available(available_size._1, r + available_size) ++ r)}
+          expand_available(available_size._1, r + available_size) ++ r) ++
+    nearby(dug, map_mine)}
 
 
 
