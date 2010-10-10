@@ -48,10 +48,7 @@ object T{
 
 
 
-trait      AbstractClue{}
-case class DefiniteClue() extends AbstractClue
-
-trait Clue extends AbstractClue with Ordered[Clue]{
+trait Clue extends Ordered[Clue]{
   val min: T.MineSize
   val max: T.MineSize
   val tiles: T.TileSet
@@ -123,32 +120,6 @@ case class SubtractedClue(val min  : T.MineSize,
                           val max  : T.MineSize,
                           val tiles: T.TileSet) extends Clue
 
-// set is used to filter the same clues
-case class Conclusion(            tile: T.Tile,
-                       exclusive_clues: T.ClueSet,
-                      conjuncted_clues: List[T.ClueSet]) extends CountUtil{
-  // def debug: Conclusion = {
-  //   print(tile)
-  //   print(": probability: ")
-  //   print(count_hit)
-  //   print(" / ")
-  //   println(count)
-  //   println(exclusive_clues)
-  //   return this}
-
-  // conclude after compact
-  // lazy val conclude_compacted: AbstractClue =
-  //   if(clues.isEmpty)
-  //     DefiniteClue(0)
-  //   else
-  //     clues.find((clue) => clue.size == clue.tiles.size) match{
-  //       case Some(clue) => DefiniteClue(1)
-  //       case None       => DefiniteClue(probability)}
-
-  lazy val count: Int =
-    calculate_count(conjuncted_clues.reverse,
-                    T.emptyClueSet + ExclusiveClue(1, T.emptyTileSet + tile))}
-
 
 
 trait MapUtil{
@@ -173,13 +144,33 @@ trait MapUtil{
 
 
 
-trait CountUtil{
-  val count: Int
+case class Segment(val map: T.MineMap) extends MapUtil{
 
-  val  exclusive_clues: T.ClueSet
-  val conjuncted_clues: List[T.ClueSet]
+  // all choices (available block) with calculated priority
+  lazy val choices: T.Choices =
+    T.emptyChoices ++ map_available.keys.map((tile) =>
+      (count_hit(tile).toDouble / count, tile))
 
-  protected def calculate_count(    list: List[T.ClueSet],
+  lazy val count: Int = calculate_count(conjuncted_clues.reverse)
+
+  def count_hit(tile: T.Tile) =
+    calculate_count(conjuncted_clues.reverse,
+                    T.emptyClueSet + ExclusiveClue(1, T.emptyTileSet + tile))
+
+  lazy val exclusive_clues: T.ClueSet = map_dug.foldRight(T.emptyClueSet)(
+    (tile_size, result) => {
+      val tile = tile_size._1
+      val size = tile_size._2
+      val mines = size - nearby(tile, map_mine).size
+      val tiles = T.emptyTileSet ++ nearby(tile, map_available).keys
+      result + ExclusiveClue(mines, tiles)})
+
+  lazy val conjuncted_clues: List[T.ClueSet] =
+    conjunct_clues(exclusive_clues.toList)
+
+
+
+  private def calculate_count(    list: List[T.ClueSet],
                               excluded: T.ClueSet = T.emptyClueSet,
                                 result: Int = 1): Int =
     list match{
@@ -205,36 +196,6 @@ trait CountUtil{
     T.emptyClueSet ++ clues.zip(sizes).map((cs) =>
       ExclusiveClue(cs._2, cs._1.tiles))
 
-  private def combos[A](list: List[List[A]]): List[List[A]] = list match{
-    case Nil         => List(Nil)
-    case (xs :: xss) => for(x <- xs; rs <- combos(xss)) yield x :: rs}}
-
-
-
-case class Segment(val map: T.MineMap) extends MapUtil with CountUtil{
-
-  // all choices (available block) with calculated priority
-  lazy val choices: T.Choices =
-    T.emptyChoices ++ conclusions.map((conclusion) =>
-      (conclusion.count.toDouble / count, conclusion.tile))
-
-  lazy val count: Int = calculate_count(conjuncted_clues.reverse)
-
-  lazy val conclusions =
-    map_available.keys.map((tile) =>
-      Conclusion(tile, exclusive_clues, conjuncted_clues))
-
-  lazy val exclusive_clues: T.ClueSet = map_dug.foldRight(T.emptyClueSet)(
-    (tile_size, result) => {
-      val tile = tile_size._1
-      val size = tile_size._2
-      val mines = size - nearby(tile, map_mine).size
-      val tiles = T.emptyTileSet ++ nearby(tile, map_available).keys
-      result + ExclusiveClue(mines, tiles)})
-
-  lazy val conjuncted_clues: List[T.ClueSet] =
-    conjunct_clues(exclusive_clues.toList)
-
   private def conjunct_clues( clues: List[Clue],
                              result: List[T.ClueSet] = List()):
                                      List[T.ClueSet] = {
@@ -248,7 +209,11 @@ case class Segment(val map: T.MineMap) extends MapUtil with CountUtil{
 
   private def combos_pair[A](list: List[A]): List[(A, A)] = list match{
     case Nil       => Nil
-    case (x :: xs) => (for(y <- xs) yield (x, y)) ++ combos_pair(xs)}}
+    case (x :: xs) => (for(y <- xs) yield (x, y)) ++ combos_pair(xs)}
+
+  private def combos[A](list: List[List[A]]): List[List[A]] = list match{
+    case Nil         => List(Nil)
+    case (xs :: xss) => for(x <- xs; rs <- combos(xss)) yield x :: rs}}
 
 
 
@@ -264,6 +229,9 @@ case class Imp(val map: T.MineMap) extends MapUtil{
 
   lazy val choices50: T.Choices = choices.filter(_._1 >= 0.5)
 
+  lazy val choices: T.Choices = segments.foldRight(T.emptyChoices)(
+    (segment, result) => segment.choices ++ result)
+
   lazy val segments: List[Segment] =
     map_available.foldRight((List[Segment](), T.emptyTileSet))(
       (available_size, segments_tiles) => {
@@ -278,7 +246,11 @@ case class Imp(val map: T.MineMap) extends MapUtil{
           (segment :: segments, tiles ++ segment.map.keys)
     }})._1
 
-  def expand_available(available: T.Tile, result: T.MineMap): T.MineMap =
+
+
+  private def expand_available(available: T.Tile,
+                                  result: T.MineMap):
+                                          T.MineMap =
     nearby(available, map_dug).foldRight(result)(
       (dug_size, result) =>
         if(result.contains(dug_size._1))
@@ -287,17 +259,16 @@ case class Imp(val map: T.MineMap) extends MapUtil{
           expand_dug(dug_size._1,
                      result + dug_size) ++ result)
 
-  def expand_dug(dug: T.Tile, result: T.MineMap): T.MineMap =
+  private def expand_dug(   dug: T.Tile,
+                         result: T.MineMap):
+                                 T.MineMap =
     nearby(dug, map_available).foldRight(result)(
       (available_size, result) =>
         if(result.contains(available_size._1))
           result
         else
           expand_available(available_size._1,
-                           result + available_size) ++ result)
-
-  lazy val choices: T.Choices = segments.foldRight(T.emptyChoices)(
-    (segment, result) => segment.choices ++ result)}
+                           result + available_size) ++ result)}
 
 
 
