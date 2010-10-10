@@ -56,6 +56,8 @@ trait Clue extends AbstractClue with Ordered[Clue]{
   val max: T.MineSize
   val tiles: T.TileSet
 
+  def --(set: T.ClueSet): Clue = set.foldRight(this)((c, r) => r -- c)
+
   def --(that: Clue): Clue = {
     val intersected    = tiles & that.tiles
     val exclusive_size = tiles.size - intersected.size
@@ -204,7 +206,20 @@ case class Segment(val map: T.MineMap) extends MapUtil{
   // def exclusive_count(overlap_clue: Clue): Int =
   //   clues.foldRight(1)((clue, count) => (clue -- overlap_clue).count * count)
 
-  lazy val count: Int = 0
+  lazy val count: Int = calculate_count(conjuncted_clues.reverse)
+
+  private def calculate_count(    list: List[T.ClueSet],
+                              excluded: T.ClueSet = T.emptyClueSet,
+                                result: Int = 1): Int =
+    list match{
+      case Nil             =>
+        exclusive_clues.map(_  -- excluded).foldRight(result)(
+          (c, r) => c.asInstanceOf[ExclusiveClue].count * r)
+
+      case (clues :: left) =>
+        result + split_conjuncted_clues(clues).foldRight(0)((picked, r) =>
+          r + calculate_count(
+                left.map(T.emptyClueSet ++ _.map(_  -- picked)), picked, r))}
 
   private def split_conjuncted_clues(clues: T.ClueSet):
                                             List[T.ClueSet] =
