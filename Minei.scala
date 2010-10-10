@@ -206,16 +206,16 @@ case class Segment(val map: T.MineMap) extends MapUtil{
 
   lazy val count: Int = 0
 
-  private def split_conjuncted_clues_combos(clues: T.ClueSet):
-                                                   List[T.ClueSet] =
-    expand_combos(clues).map(split_conjuncted_clues(clues, _))
+  private def split_conjuncted_clues(clues: T.ClueSet):
+                                            List[T.ClueSet] =
+    size_combos(clues).map(to_exclusive_clues(clues, _))
 
-  private def expand_combos(clues: T.ClueSet): List[List[T.MineSize]] =
+  private def size_combos(clues: T.ClueSet): List[List[T.MineSize]] =
     combos(clues.map((clue) => clue.min.to(clue.max).toList).toList)
 
-  private def split_conjuncted_clues(clues: T.ClueSet,
-                                     sizes: List[T.MineSize]):
-                                            T.ClueSet =
+  private def to_exclusive_clues(clues: T.ClueSet,
+                                 sizes: List[T.MineSize]):
+                                        T.ClueSet =
     T.emptyClueSet ++ clues.zip(sizes).map((cs) =>
       ExclusiveClue(cs._2, cs._1.tiles))
 
