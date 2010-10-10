@@ -257,38 +257,56 @@ case class Imp(val map: T.MineMap) extends MapUtil{
     map_available.foldRight((List[Segment](), T.emptyTileSet))(
       (available_size, segments_tiles) => {
         val available = available_size._1
-        val size      = available_size._2
-        val segments  = segments_tiles._1
-        val tiles     = segments_tiles._2
+        val      size = available_size._2
+        val  segments = segments_tiles._1
+        val     tiles = segments_tiles._2
         if(tiles.contains(available)) // already in some segment
           segments_tiles
         else{
-          val segment = Segment(expand_available(available, T.emptyMineMap))
+          val segment = Segment(expand_available(available))
           (segment :: segments, tiles ++ segment.map.keys)
     }})._1.filter(!_.isEmpty)
 
 
 
   private def expand_available(available: T.Tile,
-                                  result: T.MineMap):
+                                  result: T.MineMap = T.emptyMineMap,
+                                traveled: T.TileSet = T.emptyTileSet):
                                           T.MineMap =
-    nearby(available, map_dug).foldRight(result)(
-      (dug_size, r) =>
-        if(r.contains(dug_size._1))
-          r
-        else
-          expand_dug(dug_size._1, r + dug_size) ++ r) ++
+    nearby(available, map_dug).foldRight((result, traveled))(
+      (dug_size, result_traveled) => {
+        val  dug =        dug_size._1
+        val size =        dug_size._2
+        val    r = result_traveled._1
+        val    t = result_traveled._2
+
+        if(t.contains(dug))
+          (r, t)
+        else{
+          val tdug = t + dug
+          if(nearby(dug, map_mine).size == size)
+            (r -- nearby(dug, map_available).keys, tdug)
+          else
+            (expand_dug(dug, r + dug_size, tdug), tdug)}})._1 ++
     nearby(available, map_mine)
 
-  private def expand_dug(   dug: T.Tile,
-                         result: T.MineMap):
-                                 T.MineMap =
-    nearby(dug, map_available).foldRight(result)(
-      (available_size, r) =>
-        if(r.contains(available_size._1))
-          r
-        else
-          expand_available(available_size._1, r + available_size) ++ r) ++
+  private def expand_dug(     dug: T.Tile,
+                           result: T.MineMap,
+                         traveled: T.TileSet):
+                                   T.MineMap =
+    nearby(dug, map_available).foldRight((result, traveled))(
+      (available_size, result_traveled) => {
+        val available =  available_size._1
+        val      size =  available_size._2
+        val         r = result_traveled._1
+        val         t = result_traveled._2
+
+        if(t.contains(available))
+          (r, t)
+        else{
+          val tava = t + available
+          (expand_available(available,
+                            r + available_size, tava), tava)}})._1 ++
     nearby(dug, map_mine)}
 
 
