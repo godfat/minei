@@ -160,10 +160,13 @@ trait MapUtil{
 
 case class Segment(val map: T.MineMap) extends MapUtil{
 
+  lazy val isEmpty: Boolean = map.isEmpty
+
   // all choices (available block) with calculated priority
   lazy val choices: T.Choices =
     T.emptyChoices ++ map_available.keys.map((tile) =>
-      (count_hit(tile).toDouble / count, tile))
+      {println("Tile " + tile + ": " + count_hit(tile) + " / " + count)
+       (count_hit(tile).toDouble / count, tile)})
 
   lazy val count: Int = calculate_count(conjuncted_clues.reverse)
 
@@ -261,7 +264,7 @@ case class Imp(val map: T.MineMap) extends MapUtil{
         else{
           val segment = Segment(expand_available(available, T.emptyMineMap))
           (segment :: segments, tiles ++ segment.map.keys)
-    }})._1
+    }})._1.filter(!_.isEmpty)
 
 
 
