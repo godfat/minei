@@ -160,7 +160,7 @@ trait MapUtil{
 
 case class Segment(val map: T.MineMap) extends MapUtil{
 
-  lazy val isEmpty: Boolean = map.isEmpty
+  lazy val isEmpty: Boolean = map_available.isEmpty
 
   // all choices (available block) with calculated priority
   lazy val choices: T.Choices =
@@ -239,7 +239,7 @@ case class Segment(val map: T.MineMap) extends MapUtil{
 
 case class Imp(val map: T.MineMap) extends MapUtil{
   def debug: Imp = {
-    println(choices.filter(_._1 > 0.0))
+    println(segments)
     return this}
 
   // pick the best result
