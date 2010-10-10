@@ -56,13 +56,16 @@ trait Clue extends Ordered[Clue]{
   def --(set: T.ClueSet): Clue = set.foldRight(this)((c, r) => r -- c)
 
   def --(that: Clue): Clue = {
-    val intersected    = tiles & that.tiles
-    val exclusive_size = tiles.size - intersected.size
+    println(this + " - " + that)
+    val intersected = this.tiles  & that.tiles
+    val  left_tiles = this.tiles -- intersected
+    val other_tiles = that.tiles -- intersected
+
     val min = List(0,
-                   this.min - List(intersected.size, that.max  ).min).max
-    val max = List(exclusive_size,
-                   this.max - List(0, that.min - exclusive_size).max).min
-    val left_tiles = tiles -- that.tiles
+                   this.min - List(intersected.size,     that.max).min).max
+
+    val max = List(left_tiles.size,
+                   this.max - List(0, that.min - other_tiles.size).max).min
 
     if(min == max)  ExclusiveClue(min,      left_tiles)
     else           SubtractedClue(min, max, left_tiles)}
@@ -176,7 +179,9 @@ case class Segment(val map: T.MineMap) extends MapUtil{
     list match{
       case Nil             =>
         exclusive_clues.map(_  -- excluded).foldRight(result)(
-          (c, r) => c.asInstanceOf[ExclusiveClue].count * r)
+          (c, r) => {
+            println(c)
+            c.asInstanceOf[ExclusiveClue].count * r})
 
       case (clues :: left) =>
         result + split_conjuncted_clues(clues).foldRight(0)((picked, r) =>
