@@ -70,8 +70,9 @@ trait Clue extends Ordered[Clue]{
       val max = List(left_tiles.size,
                      this.max - List(0, that.min - other_tiles.size).max).min
 
-      if(min == max)  ExclusiveClue(min,      left_tiles)
-      else           SubtractedClue(min, max, left_tiles)}}
+      if     (min >  max)      EmptyClue()
+      else if(min == max)  ExclusiveClue(min,      left_tiles)
+      else                SubtractedClue(min, max, left_tiles)}}
 
 
   def &(that: Clue): Clue = {
@@ -192,14 +193,13 @@ case class Segment(val map: T.MineMap) extends MapUtil{
     list match{
       case Nil             =>
         exclusive_clues.map(_  -- excluded).foldRight(1)(
-          (c, result) => {
-            ExclusiveClue(c.min, c.tiles).count * result})
+          (c, result) =>
+            ExclusiveClue(c.min, c.tiles).count * result)
 
       case (clues :: left) =>
         split_conjuncted_clues(clues.map(_ -- excluded)).foldRight(0)(
           (picked, result) =>
-            calculate_count(left.map(T.emptyClueSet ++ _.map(_  -- picked))) +
-            result)}
+            calculate_count(left, excluded ++ picked) + result)}
 
   private def split_conjuncted_clues(clues: T.ClueSet):
                                             List[T.ClueSet] =
