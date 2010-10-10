@@ -48,8 +48,8 @@ object T{
 
 
 
-trait      AbstractClue{val probability: T.Probability}
-case class DefiniteClue(val probability: T.Probability) extends AbstractClue
+trait      AbstractClue{}
+case class DefiniteClue() extends AbstractClue
 
 trait Clue extends AbstractClue with Ordered[Clue]{
   val min: T.MineSize
@@ -126,7 +126,7 @@ case class SubtractedClue(val min  : T.MineSize,
 // set is used to filter the same clues
 case class Conclusion(            tile: T.Tile,
                        exclusive_clues: T.ClueSet,
-                      conjuncted_clues: List[T.ClueSet]){}
+                      conjuncted_clues: List[T.ClueSet]) extends CountUtil{
   // def debug: Conclusion = {
   //   print(tile)
   //   print(": probability: ")
@@ -145,26 +145,9 @@ case class Conclusion(            tile: T.Tile,
   //       case Some(clue) => DefiniteClue(1)
   //       case None       => DefiniteClue(probability)}
 
-  // lazy val count: Int = count_hit + count_miss
-  //
-  // lazy val count_hit: Int =
-  //   calculate_count(min_hit, max, ExclusiveClue(1, T.TileSet(tile)))
-  //
-  // lazy val count_miss: Int =
-  //   calculate_count(min, max, ExclusiveClue(0, T.TileSet(tile)))
-  //
-  // // same as count, but with only one foldr
-  // lazy val count_fast: Int =
-  //   calculate_count(min, max, ExclusiveClue(0, T.TileSet()))
-  //
-  // private def calculate_count(min: Int, max: Int, clue: Clue): Int =
-  //   min.to(max).foldRight(0)((size, count) => {
-  //     val overlap_clue = ExclusiveClue(size, overlap)
-  //     val without_pos  = overlap_clue -- clue
-  //     without_pos.count * exclusive_count(overlap_clue) + count})
-  //
-  // def exclusive_count(overlap_clue: Clue): Int =
-  //   clues.foldRight(1)((clue, count) => (clue -- overlap_clue).count * count)}
+  lazy val count: Int =
+    calculate_count(conjuncted_clues.reverse,
+                    T.emptyClueSet + ExclusiveClue(1, T.emptyTileSet + tile))}
 
 
 
@@ -190,25 +173,13 @@ trait MapUtil{
 
 
 
-case class Segment(val map: T.MineMap) extends MapUtil{
+trait CountUtil{
+  val count: Int
 
-  // all choices (available block) with calculated priority
-  // lazy val choices: T.Choices =
-  //   T.emptyChoices ++ conclusions.map((conclusion) =>
-  //     (conclusion.count.toDouble / count, conclusion.tile))
+  val  exclusive_clues: T.ClueSet
+  val conjuncted_clues: List[T.ClueSet]
 
-  // private def calculate_count(min: Int, max: Int, clue: Clue): Int =
-  //   min.to(max).foldRight(0)((size, count) => {
-  //     val overlap_clue = ExclusiveClue(size, overlap)
-  //     val without_pos  = overlap_clue -- clue
-  //     without_pos.count * exclusive_count(overlap_clue) + count})
-  //
-  // def exclusive_count(overlap_clue: Clue): Int =
-  //   clues.foldRight(1)((clue, count) => (clue -- overlap_clue).count * count)
-
-  lazy val count: Int = calculate_count(conjuncted_clues.reverse)
-
-  private def calculate_count(    list: List[T.ClueSet],
+  protected def calculate_count(    list: List[T.ClueSet],
                               excluded: T.ClueSet = T.emptyClueSet,
                                 result: Int = 1): Int =
     list match{
@@ -234,11 +205,20 @@ case class Segment(val map: T.MineMap) extends MapUtil{
     T.emptyClueSet ++ clues.zip(sizes).map((cs) =>
       ExclusiveClue(cs._2, cs._1.tiles))
 
-  // private def calculate_count(min: Int, max: Int, hit_clue: Clue): Int =
-  //   min.to(max).foldRight(0)((size, count) => {
-  //     val supposed_clue = ExclusiveClue(size, clue.tiles)
-  //     val without_hit   = supposed_clue -- hit_clue
-  //     without_hit.count * exclusive_count(overlap_clue) + count})
+  private def combos[A](list: List[List[A]]): List[List[A]] = list match{
+    case Nil         => List(Nil)
+    case (xs :: xss) => for(x <- xs; rs <- combos(xss)) yield x :: rs}}
+
+
+
+case class Segment(val map: T.MineMap) extends MapUtil with CountUtil{
+
+  // all choices (available block) with calculated priority
+  lazy val choices: T.Choices =
+    T.emptyChoices ++ conclusions.map((conclusion) =>
+      (conclusion.count.toDouble / count, conclusion.tile))
+
+  lazy val count: Int = calculate_count(conjuncted_clues.reverse)
 
   lazy val conclusions =
     map_available.keys.map((tile) =>
@@ -268,11 +248,7 @@ case class Segment(val map: T.MineMap) extends MapUtil{
 
   private def combos_pair[A](list: List[A]): List[(A, A)] = list match{
     case Nil       => Nil
-    case (x :: xs) => (for(y <- xs) yield (x, y)) ++ combos_pair(xs)}
-
-  private def combos[A](list: List[List[A]]): List[List[A]] = list match{
-    case Nil         => List(Nil)
-    case (xs :: xss) => for(x <- xs; rs <- combos(xss)) yield x :: rs}}
+    case (x :: xs) => (for(y <- xs) yield (x, y)) ++ combos_pair(xs)}}
 
 
 
