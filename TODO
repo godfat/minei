@@ -1,18 +1,18 @@
 = minei todo list
 
-0. short-circuit it when 100% found. (reduce computing)
+(O) 0. mark impossible blocks to 0 instead of unknown block.
+       (tkcn) (reduce computing)
 
-1. mark impossible blocks to 0 instead of unknown block.
-   (tkcn) (reduce computing)
+(X) 1. short-circuit it when 100% found. (reduce computing)
 
-2. use better algorithm to split ClueSet instead of nearby
-   (stimim) (more accurate comparing to calculate nearby 2)
+(O) 2. use better algorithm to split ClueSet instead of nearby
+       (stimim) (more accurate comparing to calculate nearby 2)
 
-3. use combinations of overlapped clues to calculate combos
-   (real possibility)
+(O) 3. use combinations of overlapped clues to calculate combos
+       (real probability)
 
-4. do we consider the remaining mines? (tkcn) (more real possibility)
+(X) 4. do we consider the remaining mines? (tkcn) (more real probability)
 
-5. do we consider the possibility for opponent if minei failed to hit
-   the mine? thus, we'll need to calculate the score for the input,
-   so it will truly be a minimax algorithm. (stimim) (scoring)
+(X) 5. do we consider the probability for opponent if minei failed to hit
+       the mine? thus, we'll need to calculate the score for the input,
+       so it will truly be a minimax algorithm. (stimim) (scoring)
