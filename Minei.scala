@@ -53,10 +53,11 @@ trait Clue extends Ordered[Clue]{
   val max: T.MineSize
   val tiles: T.TileSet
 
+  def intersected(that: Clue): Boolean = (this.tiles & that.tiles).nonEmpty
+
   def --(set: T.ClueSet): Clue = set.foldRight(this)((c, r) => r -- c)
 
   def --(that: Clue): Clue = {
-    println(this + " - " + that)
     val intersected = this.tiles  & that.tiles
     val  left_tiles = this.tiles -- intersected
     val other_tiles = that.tiles -- intersected
@@ -77,6 +78,9 @@ trait Clue extends Ordered[Clue]{
                    this.min - (this.tiles.size - intersected.size),
                    that.min - (that.tiles.size - intersected.size)).max
     val max = List(intersected.size, this.max, that.max).min
+
+    if(min > max)
+    println("I: " + this + "  &  " + that + " : " + min + "/" + max)
 
     if(min == max)  ExclusiveClue(min,      intersected)
     else           ConjunctedClue(min, max, intersected)}
@@ -180,8 +184,7 @@ case class Segment(val map: T.MineMap) extends MapUtil{
       case Nil             =>
         exclusive_clues.map(_  -- excluded).foldRight(result)(
           (c, r) => {
-            println(c)
-            c.asInstanceOf[ExclusiveClue].count * r})
+            ExclusiveClue(c.min, c.tiles).count * r})
 
       case (clues :: left) =>
         result + split_conjuncted_clues(clues).foldRight(0)((picked, r) =>
@@ -204,13 +207,15 @@ case class Segment(val map: T.MineMap) extends MapUtil{
   private def conjunct_clues( clues: List[Clue],
                              result: List[T.ClueSet] = List()):
                                      List[T.ClueSet] = {
-    val conjuncted = T.emptyClueSet ++ combos_pair(clues).map(conjunct(_))
+    val conjuncted = T.emptyClueSet ++
+      combos_pair(clues).filter(intersected(_)).map(conjunct(_))
     if(conjuncted.isEmpty)
       result
     else
       conjuncted :: conjunct_clues(conjuncted.toList, result)}
 
-  private def conjunct(cc: (Clue, Clue)): Clue = cc._1 & cc._2
+  private def intersected(cc: (Clue, Clue)): Boolean = cc._1 intersected cc._2
+  private def conjunct(   cc: (Clue, Clue)): Clue    = cc._1 & cc._2
 
   private def combos_pair[A](list: List[A]): List[(A, A)] = list match{
     case Nil       => Nil
