@@ -58,18 +58,20 @@ trait Clue extends Ordered[Clue]{
   def --(set: T.ClueSet): Clue = set.foldRight(this)((c, r) => r -- c)
 
   def --(that: Clue): Clue = {
-    val intersected = this.tiles  & that.tiles
-    val  left_tiles = this.tiles -- intersected
-    val other_tiles = that.tiles -- intersected
+    val intersected = this.tiles & that.tiles
+    if(intersected.isEmpty) this
+    else{
+      val  left_tiles = this.tiles -- intersected
+      val other_tiles = that.tiles -- intersected
 
-    val min = List(0,
-                   this.min - List(intersected.size,     that.max).min).max
+      val min = List(0,
+                     this.min - List(intersected.size,     that.max).min).max
 
-    val max = List(left_tiles.size,
-                   this.max - List(0, that.min - other_tiles.size).max).min
+      val max = List(left_tiles.size,
+                     this.max - List(0, that.min - other_tiles.size).max).min
 
-    if(min == max)  ExclusiveClue(min,      left_tiles)
-    else           SubtractedClue(min, max, left_tiles)}
+      if(min == max)  ExclusiveClue(min,      left_tiles)
+      else           SubtractedClue(min, max, left_tiles)}}
 
 
   def &(that: Clue): Clue = {
