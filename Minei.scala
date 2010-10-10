@@ -53,7 +53,7 @@ trait Clue extends Ordered[Clue]{
   val max: T.MineSize
   val tiles: T.TileSet
 
-  def intersected(that: Clue): Boolean = (this.tiles & that.tiles).nonEmpty
+  lazy val isEmpty: Boolean = min == 0 && max == 0 && tiles.isEmpty
 
   def --(set: T.ClueSet): Clue = set.foldRight(this)((c, r) => r -- c)
 
@@ -74,17 +74,18 @@ trait Clue extends Ordered[Clue]{
 
   def &(that: Clue): Clue = {
     val intersected = tiles & that.tiles
-    val min = List(0,
-                   this.min - (this.tiles.size - intersected.size),
-                   that.min - (that.tiles.size - intersected.size)).max
-    val max = List(intersected.size, this.max, that.max).min
+    if(intersected.isEmpty) EmptyClue()
+    else{
+      val min = List(0,
+                     this.min - (this.tiles.size - intersected.size),
+                     that.min - (that.tiles.size - intersected.size)).max
+      val max = List(intersected.size, this.max, that.max).min
 
-    if(min > max)
-    println("I: " + this + "  &  " + that + " : " + min + "/" + max)
+      if(min > max)
+      println("I: " + this + "  &  " + that + " : " + min + "/" + max)
 
-    if(min == max)  ExclusiveClue(min,      intersected)
-    else           ConjunctedClue(min, max, intersected)}
-
+      if(min == max)  ExclusiveClue(min,      intersected)
+      else           ConjunctedClue(min, max, intersected)}}
 
   // begin horrible! why there's no default lexical comparison?
   def compare(that: Clue) = {
@@ -127,6 +128,10 @@ case class SubtractedClue(val min  : T.MineSize,
                           val max  : T.MineSize,
                           val tiles: T.TileSet) extends Clue
 
+case class EmptyClue() extends Clue{
+                          val min   = 0
+                          val max   = 0
+                          val tiles = T.emptyTileSet}
 
 
 trait MapUtil{
@@ -208,13 +213,13 @@ case class Segment(val map: T.MineMap) extends MapUtil{
                              result: List[T.ClueSet] = List()):
                                      List[T.ClueSet] = {
     val conjuncted = T.emptyClueSet ++
-      combos_pair(clues).filter(intersected(_)).map(conjunct(_))
+      combos_pair(clues).map(conjunct(_)).filter(!_.isEmpty)
+
     if(conjuncted.isEmpty)
       result
     else
       conjuncted :: conjunct_clues(conjuncted.toList, result)}
 
-  private def intersected(cc: (Clue, Clue)): Boolean = cc._1 intersected cc._2
   private def conjunct(   cc: (Clue, Clue)): Clue    = cc._1 & cc._2
 
   private def combos_pair[A](list: List[A]): List[(A, A)] = list match{
