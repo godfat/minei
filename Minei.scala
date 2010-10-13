@@ -245,6 +245,7 @@ case class Segment(val map: T.MineMap) extends MapUtil{
 case class Imp(val map: T.MineMap) extends MapUtil{
   def debug: Imp = {
     println(choices.filter(_._1 > 0.0))
+    println
     return this}
 
   // pick the best result
