@@ -55,8 +55,10 @@ trait Clue extends Ordered[Clue]{
 
   lazy val isEmpty: Boolean = min == 0 && max == 0 && tiles.isEmpty
 
+  // a convenient way to do substraction for each clue in the clue set.
   def --(set: T.ClueSet): Clue = set.foldRight(this)((c, r) => r -- c)
 
+  // generalized substraction, could be used in any kind of clue
   def --(that: Clue): Clue = {
     val intersected = this.tiles & that.tiles
     if(intersected.isEmpty) this
@@ -74,7 +76,7 @@ trait Clue extends Ordered[Clue]{
       else if(min == max)  ExclusiveClue(min,      left_tiles)
       else                SubtractedClue(min, max, left_tiles)}}
 
-
+  // generalized conjunction, could be used in any kind of clue
   def &(that: Clue): Clue = {
     val intersected = tiles & that.tiles
     if(intersected.isEmpty) EmptyClue()
@@ -111,6 +113,7 @@ case class  ExclusiveClue(val  size: T.MineSize,
   val min = size
   val max = size
 
+  // binomial coefficient, C(n, k)
   lazy val count: Int = {
     val n = tiles.size
     val k = size
@@ -170,10 +173,59 @@ case class Segment(val map: T.MineMap) extends MapUtil{
   // all tiles share the same base count in a segment
   lazy val count: Int = calculate_count(conjuncted_clues.reverse)
 
+  // so what if a tile contains a mine? how many possibile combinations?
   def count_hit(tile: T.Tile) =
     calculate_count(conjuncted_clues.reverse,
                     T.emptyClueSet + ExclusiveClue(1, T.emptyTileSet + tile))
 
+  // the core algorithm for minei, basically, it lists all the possible
+  // combinations of conjuncted clues and sum them up; for each choosen
+  // combination, all exclusive clues should substract all of the possibles,
+  // then multiply all the counted combinations. the most conjuncted clue
+  // should *be* an exclusive clue, that's how it works, as previous overlap.
+  // so in minei-0.1.x, there's only one level of intersection, but in 0.2.x,
+  // there are infinite level of instersections!
+  private def calculate_count(    list: List[T.ClueSet],
+                              excluded: T.ClueSet = T.emptyClueSet): Int =
+    list match{
+      case Nil             =>
+        // so now all choosen conjuncted clues are subtracted,
+        // we can start multiply all the counted combinations.
+        exclusive_clues.map(_  -- excluded).foldRight(1)(
+          (c, result) =>
+            ExclusiveClue(c.min, c.tiles).count * result)
+
+      case (clues :: left) =>
+        // see the definition of split_conjuncted_clues below
+        split_conjuncted_clues(clues.map(_ -- excluded)).foldRight(0)(
+          (picked, result) =>
+            // recursively do the same thing for previous conjunction level
+            calculate_count(left, excluded ++ picked) *
+            // and we'll need to count for conjuncted clues which turn into
+            // choosen exclusive clues
+            calculate_count_split_exclusive(picked) +
+            // accumulating
+            result)}
+
+  // list all the possible combinations of conjuncted clues!
+  private def split_conjuncted_clues(clues: T.ClueSet):
+                                            List[T.ClueSet] =
+    size_combos(clues).map(to_exclusive_clues(clues, _))
+
+  // so the conjuncted clues were already turned into exclusive clues,
+  // we can simply calculate the combinations. TODO: don't do type cast!
+  private def calculate_count_split_exclusive(clues: T.ClueSet): Int =
+    clues.foldRight(1)(
+      (clue, result) => clue.asInstanceOf[ExclusiveClue].count * result)
+
+  // for a choozen size, turn the conjuncted one into exclusive one.
+  private def to_exclusive_clues(clues: T.ClueSet,
+                                 sizes: List[T.MineSize]):
+                                        T.ClueSet =
+    T.emptyClueSet ++ clues.zip(sizes).map((cs) =>
+      ExclusiveClue(cs._2, cs._1.tiles))
+
+  // the raw exclusive clues directly calculated from the segment
   lazy val exclusive_clues: T.ClueSet = map_dug.foldRight(T.emptyClueSet)(
     (tile_size, result) => {
       val tile = tile_size._1
@@ -182,42 +234,9 @@ case class Segment(val map: T.MineMap) extends MapUtil{
       val tiles = T.emptyTileSet ++ nearby(tile, map_available).keys
       result + ExclusiveClue(mines, tiles)})
 
+  // a list for all possible conjuncted clues
   lazy val conjuncted_clues: List[T.ClueSet] =
     conjunct_clues(exclusive_clues.toList)
-
-
-
-  private def calculate_count(    list: List[T.ClueSet],
-                              excluded: T.ClueSet = T.emptyClueSet): Int =
-    list match{
-      case Nil             =>
-        exclusive_clues.map(_  -- excluded).foldRight(1)(
-          (c, result) =>
-            ExclusiveClue(c.min, c.tiles).count * result)
-
-      case (clues :: left) =>
-        split_conjuncted_clues(clues.map(_ -- excluded)).foldRight(0)(
-          (picked, result) =>
-            calculate_count(left, excluded ++ picked) *
-            calculate_count_split_exclusive(picked) +
-            result)}
-
-  private def calculate_count_split_exclusive(clues: T.ClueSet): Int =
-    clues.foldRight(1)(
-      (clue, result) => clue.asInstanceOf[ExclusiveClue].count * result)
-
-  private def split_conjuncted_clues(clues: T.ClueSet):
-                                            List[T.ClueSet] =
-    size_combos(clues).map(to_exclusive_clues(clues, _))
-
-  private def size_combos(clues: T.ClueSet): List[List[T.MineSize]] =
-    combos(clues.map((clue) => clue.min.to(clue.max).toList).toList)
-
-  private def to_exclusive_clues(clues: T.ClueSet,
-                                 sizes: List[T.MineSize]):
-                                        T.ClueSet =
-    T.emptyClueSet ++ clues.zip(sizes).map((cs) =>
-      ExclusiveClue(cs._2, cs._1.tiles))
 
   private def conjunct_clues( clues: List[Clue],
                              result: List[T.ClueSet] = List()):
@@ -232,9 +251,15 @@ case class Segment(val map: T.MineMap) extends MapUtil{
 
   private def conjunct(   cc: (Clue, Clue)): Clue    = cc._1 & cc._2
 
+  // this is for conjuncting each clue
   private def combos_pair[A](list: List[A]): List[(A, A)] = list match{
     case Nil       => Nil
     case (x :: xs) => (for(y <- xs) yield (x, y)) ++ combos_pair(xs)}
+
+  // this is for listing all possible selected
+  // exclusive clues from conjuncted clues
+  private def size_combos(clues: T.ClueSet): List[List[T.MineSize]] =
+    combos(clues.map((clue) => clue.min.to(clue.max).toList).toList)
 
   private def combos[A](list: List[List[A]]): List[List[A]] = list match{
     case Nil         => List(Nil)
