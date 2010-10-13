@@ -1,13 +1,4 @@
 // case study:
-// 01110
-// 0?x?0
-// 01110
-//
-// 00?1?
-// 113x?
-// 1x?x?
-// 11211
-
 // --00-
 // x-?3-
 // x4?xx
@@ -79,9 +70,20 @@ create_map("""
 01,01,01
 """)
 
-// Tile (1,1): 1 / 1
+// --Failed, need to introduce remaining mines-- Tile (1,1): 1 / 1
+
+val map3 =
+create_map("""
+00,00,-1,01
+01,01,03,-1
+01,-1,-1,-1
+01,01,02,01
+""")
+
+// --Failed, need to re-create segments when any 100% encountered--
 
 // Imp.create(map0).debug
 // Imp.create(map1).debug
-val imp = Imp.create(map2).debug
-println(imp.segments.map(_.conjuncted_clues))
+// val imp = Imp.create(map2).debug
+// println(imp.segments.map(_.conjuncted_clues))
+Imp.create(map3).debug
