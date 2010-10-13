@@ -291,8 +291,9 @@ case class Imp(val map: T.MineMap) extends MapUtil{
         else{
           val tdug = t + dug
           // filter impossibles
-          if(nearby(dug, map_mine).size == size)
-            (r -- nearby(dug, map_available).keys, tdug)
+          if(nearby(dug, map_mine).size == size){
+            val impossible = nearby(dug, map_available).keys
+            (r -- impossible, tdug ++ impossible)}
           else
             (expand_dug(dug, r + dug_size, tdug), tdug)}})._1 ++
     nearby(available, map_mine) // don't forget mines!
