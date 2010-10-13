@@ -54,19 +54,8 @@ val map =
 """
 -1,-1,-1,00
 00,02,01,00
-""".split('\n').map(_.split(',').filter(_ != "").map(_.toInt)).tail
+""".split('\n').map(_.split(',').filter(_ != "").map(_.toInt)).tail.transpose
 
-println(Imp.create(map).debug.segments)
-
-def combos[A](list: List[List[A]]): List[List[A]] = list match{
-  case Nil         => List(Nil)
-  case (xs :: xss) => for(x <- xs; rs <- combos(xss)) yield x :: rs
-}
-
-def combos_pair[A](list: List[A]): List[(A, A)] = list match{
-  case Nil       => Nil
-  case (x :: xs) => (for(y <- xs) yield (x, y)) ++ combos_pair(xs)
-}
-
-println(combos(List(List(1,2), List(3,4), List(5,6))))
-println(combos_pair(List(1,2,3,4,5,6,7,8)))
+val imp = Imp.create(map)
+println(imp.segments.map(_.count))
+imp.debug
