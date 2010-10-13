@@ -198,7 +198,13 @@ case class Segment(val map: T.MineMap) extends MapUtil{
       case (clues :: left) =>
         split_conjuncted_clues(clues.map(_ -- excluded)).foldRight(0)(
           (picked, result) =>
-            calculate_count(left, excluded ++ picked) + result)}
+            calculate_count(left, excluded ++ picked) *
+            calculate_count_split_exclusive(picked) +
+            result)}
+
+  private def calculate_count_split_exclusive(clues: T.ClueSet): Int =
+    clues.foldRight(1)(
+      (clue, result) => clue.asInstanceOf[ExclusiveClue].count * result)
 
   private def split_conjuncted_clues(clues: T.ClueSet):
                                             List[T.ClueSet] =
