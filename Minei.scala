@@ -24,7 +24,7 @@ class Minei extends AI_Interface{
 object T{
   lazy val dug      : Int =  1
   lazy val available: Int = -1
-  lazy val mine     : Int = -2
+  lazy val mine     : Int = -9
 
   type Probability = Double
   type MineSize    = Int
