@@ -50,12 +50,38 @@ clue properties:
 
 import org.godfat.minei.Imp
 
-val map =
-"""
--1,-1,-1,00
-00,02,01,00
-""".split('\n').map(_.split(',').filter(_ != "").map(_.toInt)).tail.transpose
+def create_map(s: String) =
+  s.split('\n').map(_.split(',').filter(_ != "").map(_.toInt)).tail.transpose
 
-val imp = Imp.create(map)
-println(imp.segments.map(_.count))
-imp.debug
+val map0 =
+create_map("""
+-1,-1,-1
+00,02,01
+""")
+
+// Tile (0,0): 2 / 2
+// Tile (1,0): 1 / 2
+// Tile (2,0): 1 / 2
+
+val map1 =
+create_map("""
+-1,-1,00
+00,02,01
+00,00,-2
+""")
+
+// Tile (0,0): 1 / 1
+
+val map2 =
+create_map("""
+01,01,01
+-1,-1,-1
+01,01,01
+""")
+
+// Tile (1,1): 1 / 1
+
+// Imp.create(map0).debug
+// Imp.create(map1).debug
+val imp = Imp.create(map2).debug
+println(imp.segments.map(_.conjuncted_clues))
