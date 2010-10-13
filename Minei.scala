@@ -164,8 +164,8 @@ case class Segment(val map: T.MineMap) extends MapUtil{
   // all choices (available block) with calculated priority
   lazy val choices: T.Choices =
     T.emptyChoices ++ map_available.keys.map((tile) =>
-      {println("Tile " + tile + ": " + count_hit(tile) + " / " + count)
-       (count_hit(tile).toDouble / count, tile)})
+      {val hit=count_hit(tile); println("Tile " + tile + ": " + hit + " / " + count)
+       (hit.toDouble / count, tile)})
 
   // all tiles share the same base count in a segment
   lazy val count: Int = calculate_count(conjuncted_clues.reverse)
