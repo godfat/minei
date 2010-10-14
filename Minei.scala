@@ -55,6 +55,14 @@ trait Clue extends Ordered[Clue]{
 
   lazy val isEmpty: Boolean = min == 0 && max == 0 && tiles.isEmpty
 
+  // binomial coefficient, C(n, k)
+  lazy val count: Int = min.to(max).foldRight(0)((size, result) => {
+    val n = tiles.size
+    val k = size
+    factorial(n, n - k + 1) / factorial(k)})
+
+  def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
+
   // a convenient way to do substraction for each clue in the clue set.
   def --(set: T.ClueSet): Clue = set.foldRight(this)((c, r) => r -- c)
 
@@ -72,7 +80,10 @@ trait Clue extends Ordered[Clue]{
       val max = List(left_tiles.size,
                      this.max - List(0, that.min - other_tiles.size).max).min
 
-      if     (min >  max)      EmptyClue()
+      if     (min >  max) new Impossible()
+      else if(min == 0 &&
+              max == 0 &&
+              tiles.isEmpty)   EmptyClue()
       else if(min == max)  ExclusiveClue(min,      left_tiles)
       else                SubtractedClue(min, max, left_tiles)}}
 
@@ -110,32 +121,23 @@ trait Clue extends Ordered[Clue]{
 
 case class  ExclusiveClue(val  size: T.MineSize,
                           val tiles: T.TileSet) extends Clue{
-  val min = size
-  val max = size
+                          val   min = size
+                          val   max = size}
 
-  // binomial coefficient, C(n, k)
-  lazy val count: Int = {
-    val n = tiles.size
-    val k = size
-    factorial(n, n - k + 1) / factorial(k)}
-
-  def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)}
-
-
-
-case class ConjunctedClue(val min  : T.MineSize,
-                          val max  : T.MineSize,
+case class ConjunctedClue(val   min: T.MineSize,
+                          val   max: T.MineSize,
                           val tiles: T.TileSet) extends Clue
 
-case class SubtractedClue(val min  : T.MineSize,
-                          val max  : T.MineSize,
+case class SubtractedClue(val   min: T.MineSize,
+                          val   max: T.MineSize,
                           val tiles: T.TileSet) extends Clue
 
 case class EmptyClue() extends Clue{
-                          val min   = 0
-                          val max   = 0
+                          val   min = 0
+                          val   max = 0
                           val tiles = T.emptyTileSet}
 
+class Impossible() extends EmptyClue{ override lazy val count: Int = 0 }
 
 trait MapUtil{
   val map: T.MineMap
@@ -192,8 +194,10 @@ case class Segment(val map: T.MineMap) extends MapUtil{
         // so now all choosen conjuncted clues are subtracted,
         // we can start multiply all the counted combinations.
         exclusive_clues.map(_  -- excluded).foldRight(1)(
-          (c, result) =>
-            ExclusiveClue(c.min, c.tiles).count * result)
+          (c, result) =>{
+            // println(excluded)
+            // println(c)
+            c.count * result})
 
       case (clues :: left) =>
         // see the definition of split_conjuncted_clues below
@@ -215,15 +219,15 @@ case class Segment(val map: T.MineMap) extends MapUtil{
   // so the conjuncted clues were already turned into exclusive clues,
   // we can simply calculate the combinations. TODO: don't do type cast!
   private def calculate_count_split_exclusive(clues: T.ClueSet): Int =
-    clues.foldRight(1)(
-      (clue, result) => clue.asInstanceOf[ExclusiveClue].count * result)
+    clues.foldRight(1)((clue, result) => clue.count * result)
 
   // for a choozen size, turn the conjuncted one into exclusive one.
   private def to_exclusive_clues(clues: T.ClueSet,
                                  sizes: List[T.MineSize]):
                                         T.ClueSet =
     T.emptyClueSet ++ clues.zip(sizes).map((cs) =>
-      ExclusiveClue(cs._2, cs._1.tiles))
+      if(cs._2 == 0 && cs._1.tiles.isEmpty) EmptyClue()
+      else                              ExclusiveClue(cs._2, cs._1.tiles))
 
   // the raw exclusive clues directly calculated from the segment
   lazy val exclusive_clues: T.ClueSet = map_dug.foldRight(T.emptyClueSet)(

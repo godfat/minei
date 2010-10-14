@@ -82,8 +82,7 @@ create_map("""
 
 // --Failed, need to re-create segments when any 100% encountered--
 
-// Imp.create(map0).debug
-// Imp.create(map1).debug
-// val imp = Imp.create(map2).debug
-// println(imp.segments.map(_.conjuncted_clues))
+Imp.create(map0).debug
+Imp.create(map1).debug
+Imp.create(map2).debug
 Imp.create(map3).debug
