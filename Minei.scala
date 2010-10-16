@@ -80,12 +80,12 @@ trait Clue extends Ordered[Clue]{
       val max = List(left_tiles.size,
                      this.max - List(0, that.min - other_tiles.size).max).min
 
-      if     (min >  max) new Impossible()
+      if     (min >  max) Impossible()
       else if(min == 0 &&
               max == 0 &&
-              tiles.isEmpty)   EmptyClue()
-      else if(min == max)  ExclusiveClue(min,      left_tiles)
-      else                SubtractedClue(min, max, left_tiles)}}
+              left_tiles.isEmpty) EmptyClue()
+      else if(min == max)     ExclusiveClue(min,      left_tiles)
+      else                   SubtractedClue(min, max, left_tiles)}}
 
   // generalized conjunction, could be used in any kind of clue
   def &(that: Clue): Clue = {
@@ -137,7 +137,7 @@ case class EmptyClue() extends Clue{
                           val   max = 0
                           val tiles = T.emptyTileSet}
 
-class Impossible() extends EmptyClue{ override lazy val count: Int = 0 }
+case class Impossible() extends EmptyClue{ override lazy val count: Int = 0 }
 
 trait MapUtil{
   val map: T.MineMap
@@ -190,14 +190,24 @@ case class Segment(val map: T.MineMap) extends MapUtil{
   private def calculate_count(    list: List[T.ClueSet],
                               excluded: T.ClueSet = T.emptyClueSet): Int =
     list match{
-      case Nil             =>
-        // so now all choosen conjuncted clues are subtracted,
-        // we can start multiply all the counted combinations.
-        exclusive_clues.map(_  -- excluded).foldRight(1)(
+      case Nil             => {
+        val r = exclusive_clues.map(_  -- excluded)
+        if(r.exists((c) => r.exists((cc) => cc.tiles == c.tiles && c.min != cc.min)))
+          0
+        else
+        r.foldRight(1)(
           (c, result) =>{
             // println(excluded)
             // println(c)
             c.count * result})
+      }
+        // so now all choosen conjuncted clues are subtracted,
+        // we can start multiply all the counted combinations.
+        // exclusive_clues.map(_  -- excluded).foldRight(1)(
+        //   (c, result) =>{
+        //     println(excluded)
+        //     println(c)
+        //     c.count * result})
 
       case (clues :: left) =>
         // see the definition of split_conjuncted_clues below
