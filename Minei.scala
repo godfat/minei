@@ -1,25 +1,7 @@
 
 package org.godfat.minei
 
-import org.psmonkey.product.client.mine.vo.GameInfo
-import org.psmonkey.product.server.mine.AI_Interface
-import org.psmonkey.product.server.mine.MineGM
-
 import scala.collection.immutable.{TreeMap, TreeSet}
-
-class Minei extends AI_Interface{
-  override def guess(info: GameInfo, xy: Array[Int]) = {
-    Imp.create(psmonkey(info.getMap())).debug.aim match{
-      case (x, y) => {
-        xy.update(0, x)
-        xy.update(1, y)}}}
-
-  private def psmonkey(map: Array[Array[Int]]): Array[Array[Int]] =
-    map.map((ys) => ys.map((v) =>
-      if(v.abs == 9) T.mine
-      else           v ))}
-
-
 
 object T{
   lazy val dug      : Int =  1
@@ -284,8 +266,8 @@ case class Segment(val map: T.MineMap) extends MapUtil{
 
 
 
-case class Imp(val map: T.MineMap) extends MapUtil{
-  def debug: Imp = {
+case class Minei(val map: T.MineMap) extends MapUtil{
+  def debug: Minei = {
     println(choices.filter(_._1 > 0.0))
     println
     return this}
@@ -361,11 +343,11 @@ case class Imp(val map: T.MineMap) extends MapUtil{
 
 
 
-object Imp{
-  def create(map: Array[Array[Int]]): Imp = {
+object Minei{
+  def create(map: Array[Array[Int]]): Minei = {
     val width : Int = map.size
     val height: Int = map.head.size
 
-    Imp(0.until(width).foldRight(T.emptyMineMap)(
+    Minei(0.until(width).foldRight(T.emptyMineMap)(
       (x: T.Index, result) => 0.until(height).foldRight(result)(
         (y: T.Index, result) => result.insert((x, y), map(x)(y)))))}}

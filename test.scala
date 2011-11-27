@@ -9,12 +9,12 @@
 // -1x?
 // 11??
 
-// val imp = Imp(Array(Array(0,1), Array(2,3)))
-// println(imp.map)
-// val c0 = imp.Clue(1, List((0,0)))
-// val c1 = imp.Clue(2, List((0,0)))
-// val c2 = imp.Clue(2, List((0,1)))
-// val c3 = imp.Clue(2, List((1,0)))
+// val minei = Minei(Array(Array(0,1), Array(2,3)))
+// println(minei.map)
+// val c0 = minei.Clue(1, List((0,0)))
+// val c1 = minei.Clue(2, List((0,0)))
+// val c2 = minei.Clue(2, List((0,1)))
+// val c3 = minei.Clue(2, List((1,0)))
 // println(c0.compare(c0)) //  0
 // println(c0.compare(c1)) // -1
 // println(c0.compare(c2)) // -1
@@ -25,11 +25,11 @@
 /*
 segment properties:
 
-  val imp: Imp
+  val minei: Minei
   // 0
-  imp.segments.foldRight1(_.map ++ _.map) == imp.map
+  minei.segments.foldRight1(_.map ++ _.map) == minei.map
   // 1
-  imp.segments.foldRight1(_.mines + _.mines) == imp.mines
+  minei.segments.foldRight1(_.mines + _.mines) == minei.mines
 
 clue properties:
 
@@ -39,7 +39,7 @@ clue properties:
                          clue0.max <= clue1.max and
 */
 
-import org.godfat.minei.Imp
+import org.godfat.minei.Minei
 
 def create_map(s: String) =
   s.split('\n').map(_.split(',').filter(_ != "").map(_.toInt)).tail.transpose
@@ -85,8 +85,8 @@ create_map("""
 
 // --Failed, need to re-create segments when any 100% encountered--
 
-// Imp.create(map0).debug
-// Imp.create(map1).debug
-// Imp.create(map2).debug
-Imp.create(map3).debug
-// Imp.create(map4).debug
+// Minei.create(map0).debug
+// Minei.create(map1).debug
+// Minei.create(map2).debug
+Minei.create(map3).debug
+// Minei.create(map4).debug
