@@ -7,7 +7,7 @@
   <property name="gwt.sdk" location="/Users/godfat/project/fork/mine/gwt-2.0.4"/>
 
   <path id="project.class.path">
-    <pathelement location="/usr/local/lib/scala-library.jar"/>
+    <pathelement location="/usr/local/Cellar/scala/2.9.1/libexec/lib/scala-library.jar"/>
     <pathelement location="war/WEB-INF/classes"/>
     <pathelement location="${gwt.sdk}/gwt-user.jar"/>
     <fileset dir="${gwt.sdk}" includes="gwt-dev*.jar"/>
@@ -24,8 +24,8 @@
 
   <taskdef resource="scala/tools/ant/antlib.xml">
     <classpath>
-      <pathelement location="/usr/local/lib/scala-compiler.jar"/>
-      <pathelement location="/usr/local/lib/scala-library.jar"/>
+      <pathelement location="/usr/local/Cellar/scala/2.9.1/libexec/lib/scala-compiler.jar"/>
+      <pathelement location="/usr/local/Cellar/scala/2.9.1/libexec/lib/scala-library.jar"/>
     </classpath>
   </taskdef>
 

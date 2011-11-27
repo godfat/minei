@@ -235,7 +235,7 @@ case class Segment(val map: T.MineMap) extends MapUtil{
   private def to_exclusive_clues(clues: T.ClueSet,
                                  sizes: List[T.MineSize]):
                                         T.ClueSet =
-    T.emptyClueSet ++ clues.zip(sizes).map((cs) =>
+    T.emptyClueSet ++ clues.toList.zip(sizes).map((cs) =>
       if(cs._2 == 0 && cs._1.tiles.isEmpty) EmptyClue()
       else                              ExclusiveClue(cs._2, cs._1.tiles))
 
