@@ -44,35 +44,38 @@ import org.godfat.minei.Imp
 def create_map(s: String) =
   s.split('\n').map(_.split(',').filter(_ != "").map(_.toInt)).tail.transpose
 
-val map0 =
+val map0 = // Tile (1,0): 1 / 1
 create_map("""
 -1,-1,-1
-00,02,01
+01,02,01
 """)
 
-// Tile (0,0): 2 / 2
-// Tile (1,0): 1 / 2
-// Tile (2,0): 1 / 2
-
-val map1 =
+val map1 = // Tile (0,0): 1 / 1
 create_map("""
 -1,-1,00
-00,02,01
-00,00,-9
+01,02,01
+00,01,-9
 """)
 
-// Tile (0,0): 1 / 1
-
-val map2 =
+val map2 = // Tile (1,1): 1 / 1
 create_map("""
 01,01,01
 -1,-1,-1
 01,01,01
 """)
 
-// --Failed, need to introduce remaining mines-- Tile (1,1): 1 / 1
-
 val map3 =
+create_map("""
+01,01,01,01,01,01,01
+-1,-1,-1,-1,-1,-1,-1
+""")
+
+// 01,01,01,01,01,01,01
+// xx,01,01,xx,01,01,xx
+
+val map4 = // Tile (1,2): 1 / 1
+           // Tile (3,1): 1 / 1
+           // Tile (3,2): 1 / 1
 create_map("""
 00,00,-1,01
 01,01,03,-1
@@ -82,7 +85,8 @@ create_map("""
 
 // --Failed, need to re-create segments when any 100% encountered--
 
-Imp.create(map0).debug
-Imp.create(map1).debug
-Imp.create(map2).debug
+// Imp.create(map0).debug
+// Imp.create(map1).debug
+// Imp.create(map2).debug
 Imp.create(map3).debug
+// Imp.create(map4).debug
