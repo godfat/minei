@@ -63,7 +63,7 @@ trait Clue extends Ordered[Clue]{
 
   def factorial(i: Int, from: Int = 1): Int = from.to(i).foldRight(1)(_ * _)
 
-  // a convenient way to do substraction for each clue in the clue set.
+  // a convenient way to do subtraction for each clue in the clue set.
   def --(set: T.ClueSet): Clue = set.foldRight(this)((c, r) => r -- c)
 
   // generalized substraction, could be used in any kind of clue
