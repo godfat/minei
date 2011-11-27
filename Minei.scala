@@ -256,17 +256,16 @@ case class Segment(val map: T.MineMap) extends MapUtil{
   lazy val conjuncted_clues: List[T.ClueSet] =
     conjunct_clues(exclusive_clues.toList)
 
-  private def conjunct_clues( clues: List[Clue],
-                             result: List[T.ClueSet] = List()):
-                                     List[T.ClueSet] = {
+  private def conjunct_clues(clues: List[Clue]):
+                                    List[T.ClueSet] = {
     val conjuncted = T.emptyClueSet ++
       combos_pair(clues).map(conjunct(_)).filter(!_.isEmpty)
 
     conjuncted match{
       case T.emptyClueSet =>
-        result
+        List()
       case _              =>
-        conjuncted :: conjunct_clues(conjuncted.toList, result)}}
+        conjuncted :: conjunct_clues(conjuncted.toList)}}
 
   private def conjunct(   cc: (Clue, Clue)): Clue    = cc._1 & cc._2
 
