@@ -4,7 +4,7 @@
   <property name="gwt.args" value=""/>
 
   <!-- Configure path to GWT SDK -->
-  <property name="gwt.sdk" location="/Users/godfat/project/fork/mine/gwt-2.0.4"/>
+  <property name="gwt.sdk" location="/Users/godfat/project/fork/mine/gwt-2.4.0"/>
 
   <path id="project.class.path">
     <pathelement location="/usr/local/Cellar/scala/2.9.1/libexec/lib/scala-library.jar"/>

@@ -22,6 +22,10 @@
 
 # build scala AI only
 > ant scalac
+# or
+> ./bin/build.sh
+# and run tests:
+> ./bin/test.sh
 
 # build entire application
 > ant build
