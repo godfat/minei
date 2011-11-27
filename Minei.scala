@@ -216,14 +216,12 @@ case class Segment(val map: T.MineMap) extends MapUtil{
     map_dug.find((tile_size) =>
       nearby(tile_size._1, mines).size > tile_size._2) match{
         case None => false
-        case    _ => true
-    }}
+        case    _ => true}}
 
   private def map_imagined(mines: T.ClueSet): T.MineMap =
     mines.foldRight(map)((clue, m) => clue match{
       case EmptyClue()             => m
-      case ExclusiveClue(_, tiles) => m.updated(tiles.firstKey, T.mine)
-    })
+      case ExclusiveClue(_, tiles) => m.updated(tiles.firstKey, T.mine)})
 
   // list all the possible combinations of conjuncted clues!
   private def split_conjuncted_clues(clues: T.ClueSet):
