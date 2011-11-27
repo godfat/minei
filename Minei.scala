@@ -80,7 +80,7 @@ trait Clue extends Ordered[Clue]{
       val max = List(left_tiles.size,
                      this.max - List(0, that.min - other_tiles.size).max).min
 
-      if     (min >  max) Impossible()
+      if     (min >  max) new Impossible()
       else if(min == 0 &&
               max == 0 &&
               left_tiles.isEmpty) EmptyClue()
@@ -137,7 +137,7 @@ case class EmptyClue() extends Clue{
                           val   max = 0
                           val tiles = T.emptyTileSet}
 
-case class Impossible() extends EmptyClue{ override lazy val count: Int = 0 }
+class Impossible() extends EmptyClue{ override lazy val count: Int = 0 }
 
 trait MapUtil{
   val map: T.MineMap
