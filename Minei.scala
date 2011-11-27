@@ -212,14 +212,14 @@ case class Segment(val map: T.MineMap) extends MapUtil{
             result)}
 
   private def contradicted(picked: T.ClueSet): Boolean = {
-    val mines = map_imagined(picked).filter(_._2 == T.mine)
+    val mines = map_imagined(picked)
     map_dug.find((tile_size) =>
       nearby(tile_size._1, mines).size > tile_size._2) match{
         case None => false
         case    _ => true}}
 
   private def map_imagined(mines: T.ClueSet): T.MineMap =
-    mines.foldRight(map)((clue, m) => clue match{
+    mines.foldRight(map_mine)((clue, m) => clue match{
       case EmptyClue()             => m
       case ExclusiveClue(_, tiles) => m.updated(tiles.firstKey, T.mine)})
 
