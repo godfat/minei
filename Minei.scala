@@ -262,10 +262,11 @@ case class Segment(val map: T.MineMap) extends MapUtil{
     val conjuncted = T.emptyClueSet ++
       combos_pair(clues).map(conjunct(_)).filter(!_.isEmpty)
 
-    if(conjuncted.isEmpty)
-      result
-    else
-      conjuncted :: conjunct_clues(conjuncted.toList, result)}
+    conjuncted match{
+      case T.emptyClueSet =>
+        result
+      case _              =>
+        conjuncted :: conjunct_clues(conjuncted.toList, result)}}
 
   private def conjunct(   cc: (Clue, Clue)): Clue    = cc._1 & cc._2
 
@@ -293,8 +294,8 @@ case class Imp(val map: T.MineMap) extends MapUtil{
 
   // pick the best result
   lazy val aim: T.Tile =
-    if(choices50.isEmpty) choices  .head._2
-    else                  choices50.last._2
+    match choices50{ case T.emptyChoices => choices  .head._2
+                     case _              => choices50.last._2 }
 
   lazy val choices50: T.Choices = choices.filter(_._1 >= 0.5)
 
