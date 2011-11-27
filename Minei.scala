@@ -294,7 +294,7 @@ case class Imp(val map: T.MineMap) extends MapUtil{
 
   // pick the best result
   lazy val aim: T.Tile =
-    match choices50{ case T.emptyChoices => choices  .head._2
+    choices50 match{ case T.emptyChoices => choices  .head._2
                      case _              => choices50.last._2 }
 
   lazy val choices50: T.Choices = choices.filter(_._1 >= 0.5)
