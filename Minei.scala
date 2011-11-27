@@ -190,24 +190,14 @@ case class Segment(val map: T.MineMap) extends MapUtil{
   private def calculate_count(    list: List[T.ClueSet],
                               excluded: T.ClueSet = T.emptyClueSet): Int =
     list match{
-      case Nil             => {
-        val r = exclusive_clues.map(_  -- excluded)
-        if(r.exists((c) => r.exists((cc) => cc.tiles == c.tiles && c.min != cc.min)))
+      case Nil             =>
+        if(contradicted(excluded))
           0
         else
-        r.foldRight(1)(
-          (c, result) =>{
-            // println(excluded)
-            // println(c)
-            c.count * result})
-      }
-        // so now all choosen conjuncted clues are subtracted,
-        // we can start multiply all the counted combinations.
-        // exclusive_clues.map(_  -- excluded).foldRight(1)(
-        //   (c, result) =>{
-        //     println(excluded)
-        //     println(c)
-        //     c.count * result})
+          // so now all choosen conjuncted clues are subtracted,
+          // we can start multiply all the counted combinations.
+          exclusive_clues.map(_ -- excluded).foldRight(1)(
+            (c, result) => c.count * result)
 
       case (clues :: left) =>
         // see the definition of split_conjuncted_clues below
@@ -220,6 +210,20 @@ case class Segment(val map: T.MineMap) extends MapUtil{
             calculate_count_split_exclusive(picked) +
             // accumulating
             result)}
+
+  private def contradicted(picked: T.ClueSet): Boolean = {
+    val mines = map_imagined(picked).filter(_._2 == T.mine)
+    map_dug.find((tile_size) =>
+      nearby(tile_size._1, mines).size > tile_size._2) match{
+        case None => false
+        case    _ => true
+    }}
+
+  private def map_imagined(mines: T.ClueSet): T.MineMap =
+    mines.foldRight(map)((clue, m) => clue match{
+      case EmptyClue()             => m
+      case ExclusiveClue(_, tiles) => m.updated(tiles.firstKey, T.mine)
+    })
 
   // list all the possible combinations of conjuncted clues!
   private def split_conjuncted_clues(clues: T.ClueSet):
