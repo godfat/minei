@@ -139,7 +139,7 @@ trait MapUtil{
         val yy = tile._2 + y
         map.get((xx, yy)) match{
           case Some(size) => result.updated((xx, yy), size) // TODO: insert?
-          case _          => result}}))}
+          case None       => result}}))}
 
 
 
