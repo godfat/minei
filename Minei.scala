@@ -62,7 +62,8 @@ trait Clue extends Ordered[Clue]{
       val max = List(left_tiles.size,
                      this.max - List(0, that.min - other_tiles.size).max).min
 
-      if     (min >  max) new Impossible()
+      if     (min >  max)             new Impossible
+      else if(min >  left_tiles.size) new Impossible
       else if(min == 0 &&
               max == 0 &&
               left_tiles.isEmpty) EmptyClue()
