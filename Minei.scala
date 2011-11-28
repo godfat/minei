@@ -195,17 +195,22 @@ case class Segment(val map: T.MineMap) extends MapUtil{
             result)}
 
   private def contradicted(picked: T.ClueSet): Boolean = {
-    val mines = map_imagined(picked)
-    map_dug.find((tile_size) =>
-      nearby(tile_size._1, mines).size > tile_size._2) match{
-        case None => false
-        case    _ => true}}
+    picked.find(_.isInstanceOf[Impossible]) match{
+      case Some(_) => false
+      case None    => {
+        val mines = map_imagined(picked)
+        map_dug.find((tile_size) =>
+          nearby(tile_size._1, mines).size > tile_size._2) match{
+            case None    => false
+            case Some(_) => true}}}}
 
   private def map_imagined(mines: T.ClueSet): T.MineMap =
     mines.foldRight(map_mine)((clue, m) => clue match{
       case EmptyClue()             => m
       case ExclusiveClue(0, _    ) => m
-      case ExclusiveClue(1, tiles) => m.updated(tiles.firstKey, T.mine)})
+      case ExclusiveClue(n, tiles) => {
+        // assert(n == tiles.size)
+        tiles.foldRight(m)((tile, r) => r.updated(tile, T.mine))}})
 
   // list all the possible combinations of conjuncted clues!
   private def split_conjuncted_clues(clues: T.ClueSet):
