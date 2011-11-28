@@ -209,6 +209,7 @@ case class Segment(val map: T.MineMap) extends MapUtil{
       case EmptyClue()             => m
       case ExclusiveClue(0, _    ) => m
       case ExclusiveClue(n, tiles) => {
+        // TODO: we might have case where 2 mines for 3 tiles
         // assert(n == tiles.size)
         tiles.foldRight(m)((tile, r) => r.updated(tile, T.mine))}})
 
@@ -280,6 +281,7 @@ case class Minei(val map: T.MineMap) extends MapUtil{
 
   // pick the best result
   lazy val aim: T.Tile =
+    // TODO: sometimes choices is empty? do we have all segments?
     choices50 match{ case T.emptyChoices => choices  .head._2
                      case _              => choices50.last._2 }
 
