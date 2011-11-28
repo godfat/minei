@@ -120,7 +120,7 @@ case class EmptyClue() extends Clue{
                           val   max = 0
                           val tiles = T.emptyTileSet}
 
-class Impossible() extends EmptyClue{ override lazy val count: Int = 0 }
+class Impossible extends EmptyClue{ override lazy val count: Int = 0 }
 
 trait MapUtil{
   val map: T.MineMap
